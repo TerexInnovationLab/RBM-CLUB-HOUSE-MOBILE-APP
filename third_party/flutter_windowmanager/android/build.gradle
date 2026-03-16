@@ -1,0 +1,18 @@
+group 'io.adaptant.labs.flutter_windowmanager'
+version '1.0'
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'io.adaptant.labs.flutter_windowmanager'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 16
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
