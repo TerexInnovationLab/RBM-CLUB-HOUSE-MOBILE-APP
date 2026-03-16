@@ -6,6 +6,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/transaction_filter_bar.dart';
 import '../widgets/transaction_list_item.dart';
@@ -20,13 +21,14 @@ class TransactionListScreen extends ConsumerWidget {
     final tx = ref.watch(transactionsProvider);
 
     return OfflineBanner(
-      child: Scaffold(
+      child: RbmTabScaffold(
+        currentIndex: 1,
         appBar: const RbmAppBar(title: AppStrings.transactionsTitle),
         body: tx.when(
           data: (items) => ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: items.length + 1,
-            separatorBuilder: (context, index) => const Divider(height: 1),
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               if (index == 0) {
                 return const Padding(

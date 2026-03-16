@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
+
 /// Transaction filter bar (placeholder).
 class TransactionFilterBar extends StatelessWidget {
   /// Creates a transaction filter bar.
@@ -12,7 +14,7 @@ class TransactionFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.filter_list),
+        const Icon(Icons.filter_list, color: AppColors.secondaryBlue),
         const SizedBox(width: 8),
         Expanded(
           child: TextField(
@@ -27,4 +29,3 @@ class TransactionFilterBar extends StatelessWidget {
     );
   }
 }
-

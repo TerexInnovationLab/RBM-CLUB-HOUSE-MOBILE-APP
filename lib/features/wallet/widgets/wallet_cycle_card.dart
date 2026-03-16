@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/rbm_card.dart';
 import '../models/monthly_summary_model.dart';
 
 /// Displays the current wallet cycle.
@@ -14,24 +15,20 @@ class WalletCycleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Current Allocation Cycle', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text('Start: ${Formatters.formatDate(summary.periodStart)}'),
-            Text('End: ${Formatters.formatDate(summary.periodEnd)}'),
-            const SizedBox(height: 12),
-            Text('Allocated: ${CurrencyFormatter.format(summary.allocatedAmount)}'),
-            Text('Spent: ${CurrencyFormatter.format(summary.spentAmount)}'),
-            Text('Remaining: ${CurrencyFormatter.format(summary.remainingAmount)}'),
-          ],
-        ),
+    return RbmCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Current Allocation Cycle', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text('Start: ${Formatters.formatDate(summary.periodStart)}'),
+          Text('End: ${Formatters.formatDate(summary.periodEnd)}'),
+          const SizedBox(height: 12),
+          Text('Allocated: ${CurrencyFormatter.format(summary.allocatedAmount)}'),
+          Text('Spent: ${CurrencyFormatter.format(summary.spentAmount)}'),
+          Text('Remaining: ${CurrencyFormatter.format(summary.remainingAmount)}'),
+        ],
       ),
     );
   }
 }
-

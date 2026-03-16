@@ -34,16 +34,28 @@ class MonthlyProgressBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Monthly usage',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+            Text(
+              '${(used * 100).toStringAsFixed(1)}% used',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.warningOrange),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
         LinearProgressIndicator(
           value: used,
           color: color,
-          minHeight: 10,
+          backgroundColor: AppColors.borderGray.withAlpha(89),
+          minHeight: 8,
           borderRadius: BorderRadius.circular(999),
         ),
-        const SizedBox(height: 6),
-        Text('${(used * 100).toStringAsFixed(1)}% used'),
       ],
     );
   }
 }
-

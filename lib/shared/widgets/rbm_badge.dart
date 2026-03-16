@@ -16,7 +16,7 @@ class RbmBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.dangerRed,
+        color: AppColors.warningOrange,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -26,4 +26,3 @@ class RbmBadge extends StatelessWidget {
     );
   }
 }
-

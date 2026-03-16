@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/rbm_card.dart';
 import '../../auth/providers/auth_provider.dart';
 
 /// Settings screen.
@@ -20,7 +21,8 @@ class SettingsScreen extends ConsumerWidget {
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Card(
+            RbmCard(
+              padding: EdgeInsets.zero,
               child: SwitchListTile(
                 title: const Text('Enable biometric login'),
                 subtitle: const Text('Use fingerprint/Face ID for faster login.'),
@@ -29,7 +31,8 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Card(
+            const RbmCard(
+              padding: EdgeInsets.zero,
               child: ListTile(
                 title: Text('Theme'),
                 subtitle: Text('System (default)'),
@@ -41,4 +44,3 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 }
-

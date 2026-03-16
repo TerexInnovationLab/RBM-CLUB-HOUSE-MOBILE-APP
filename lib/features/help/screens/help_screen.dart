@@ -5,6 +5,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../routes/route_names.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/rbm_card.dart';
 
 /// Help screen.
 class HelpScreen extends StatelessWidget {
@@ -19,11 +20,8 @@ class HelpScreen extends StatelessWidget {
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('For assistance, contact RBM Club House support.'),
-              ),
+            const RbmCard(
+              child: Text('For assistance, contact RBM Club House support.'),
             ),
             const SizedBox(height: 12),
             ListTile(
@@ -38,4 +36,3 @@ class HelpScreen extends StatelessWidget {
     );
   }
 }
-

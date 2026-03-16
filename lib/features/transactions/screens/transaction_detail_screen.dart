@@ -7,6 +7,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/rbm_card.dart';
 import '../providers/transaction_provider.dart';
 
 /// Transaction detail screen.
@@ -28,20 +29,17 @@ class TransactionDetailScreen extends ConsumerWidget {
           data: (t) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(t.merchant, style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: 6),
-                      Text('Amount: ${CurrencyFormatter.format(t.amount)}'),
-                      Text('Status: ${t.status}'),
-                      Text('Type: ${t.transactionType}'),
-                      Text('Occurred: ${Formatters.formatLocalDateTime(t.occurredAt)}'),
-                    ],
-                  ),
+              RbmCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(t.merchant, style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 6),
+                    Text('Amount: ${CurrencyFormatter.format(t.amount)}'),
+                    Text('Status: ${t.status}'),
+                    Text('Type: ${t.transactionType}'),
+                    Text('Occurred: ${Formatters.formatLocalDateTime(t.occurredAt)}'),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
@@ -59,4 +57,3 @@ class TransactionDetailScreen extends ConsumerWidget {
     );
   }
 }
-

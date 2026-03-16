@@ -7,6 +7,7 @@ import '../../../routes/route_names.dart';
 import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/balance_summary_card.dart';
@@ -24,17 +25,12 @@ class HomeScreen extends ConsumerWidget {
     final summary = ref.watch(dashboardProvider);
 
     return OfflineBanner(
-      child: Scaffold(
+      child: RbmTabScaffold(
+        currentIndex: 0,
         appBar: RbmAppBar(
           title: AppStrings.dashboardTitle,
           unreadCount: 0,
           onNotificationsTap: () => context.go(RouteNames.notifications),
-          actions: [
-            IconButton(
-              onPressed: () => context.go(RouteNames.profile),
-              icon: const Icon(Icons.person_outline),
-            ),
-          ],
         ),
         body: summary.when(
           data: (data) => RefreshIndicator(
@@ -75,4 +71,3 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
-

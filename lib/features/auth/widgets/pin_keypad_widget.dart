@@ -9,6 +9,8 @@ class PinKeypadWidget extends StatelessWidget {
     required this.onBackspace,
     required this.onConfirm,
     this.confirmEnabled = true,
+    this.confirmLabel = 'Confirm',
+    this.confirmIcon = Icons.check,
   });
 
   /// Digit handler.
@@ -23,6 +25,12 @@ class PinKeypadWidget extends StatelessWidget {
   /// Whether confirm button is enabled.
   final bool confirmEnabled;
 
+  /// Confirm button label.
+  final String confirmLabel;
+
+  /// Confirm button icon.
+  final IconData confirmIcon;
+
   @override
   Widget build(BuildContext context) {
     final buttons = <Widget>[
@@ -35,28 +43,33 @@ class PinKeypadWidget extends StatelessWidget {
       ),
     ];
 
-    return Column(
-      children: [
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 3,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.35,
-          children: buttons,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Column(
+          children: [
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 3,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.35,
+              children: buttons,
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: confirmEnabled ? onConfirm : null,
+                icon: Icon(confirmIcon),
+                label: Text(confirmLabel),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: FilledButton.icon(
-            onPressed: confirmEnabled ? onConfirm : null,
-            icon: const Icon(Icons.check),
-            label: const Text('Confirm'),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -71,6 +84,9 @@ class _DigitButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton(
       onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      ),
       child: Text(
         '$digit',
         style: Theme.of(context).textTheme.titleLarge,
@@ -89,8 +105,10 @@ class _IconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton(
       onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      ),
       child: Icon(icon),
     );
   }
 }
-

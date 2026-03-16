@@ -32,18 +32,28 @@ class RbmAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(title),
       actions: [
         if (onNotificationsTap != null)
-          IconButton(
-            onPressed: onNotificationsTap,
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.notifications_outlined),
-                Positioned(
-                  top: -4,
-                  right: -4,
-                  child: RbmBadge(count: unreadCount),
-                ),
-              ],
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: IconButton(
+              onPressed: onNotificationsTap,
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(41),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Icon(Icons.notifications_outlined),
+                  ),
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: RbmBadge(count: unreadCount),
+                  ),
+                ],
+              ),
             ),
           ),
         ...?actions,
@@ -54,4 +64,3 @@ class RbmAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
-

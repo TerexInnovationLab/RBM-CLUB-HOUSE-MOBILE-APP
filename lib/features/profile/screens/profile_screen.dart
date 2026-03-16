@@ -7,6 +7,7 @@ import '../../../routes/route_names.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/profile_header_widget.dart';
@@ -22,7 +23,8 @@ class ProfileScreen extends ConsumerWidget {
     final profile = ref.watch(staffProfileProvider);
 
     return OfflineBanner(
-      child: Scaffold(
+      child: RbmTabScaffold(
+        currentIndex: 3,
         appBar: const RbmAppBar(title: AppStrings.profileTitle),
         body: ListView(
           padding: const EdgeInsets.all(16),
@@ -98,4 +100,3 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
-

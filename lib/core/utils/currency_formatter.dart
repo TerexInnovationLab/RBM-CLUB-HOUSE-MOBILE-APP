@@ -8,12 +8,20 @@ abstract final class CurrencyFormatter {
     decimalDigits: 2,
   );
 
+  static final NumberFormat _currency0 = NumberFormat.currency(
+    locale: 'en',
+    symbol: 'MWK ',
+    decimalDigits: 0,
+  );
+
   static final NumberFormat _compact = NumberFormat.compact(locale: 'en');
 
   /// Formats an amount into `"MWK 12,500.00"`.
   static String format(double amount) => _currency.format(amount);
 
+  /// Formats a transaction amount into `"MWK 850"` (no decimals).
+  static String formatTransaction(double amount) => _currency0.format(amount);
+
   /// Formats an amount into a compact `"MWK 12.5K"`.
   static String formatCompact(double amount) => 'MWK ${_compact.format(amount)}';
 }
-

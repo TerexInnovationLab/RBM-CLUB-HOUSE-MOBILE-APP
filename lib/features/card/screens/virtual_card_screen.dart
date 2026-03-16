@@ -7,6 +7,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../providers/card_provider.dart';
 import '../widgets/card_actions_row.dart';
 import '../widgets/club_card_widget.dart';
@@ -52,7 +53,8 @@ class _VirtualCardScreenState extends ConsumerState<VirtualCardScreen> {
     final card = ref.watch(virtualCardProvider);
 
     return OfflineBanner(
-      child: Scaffold(
+      child: RbmTabScaffold(
+        currentIndex: 2,
         appBar: const RbmAppBar(title: AppStrings.cardTitle),
         body: card.when(
           data: (c) => ListView(
@@ -70,4 +72,3 @@ class _VirtualCardScreenState extends ConsumerState<VirtualCardScreen> {
     );
   }
 }
-

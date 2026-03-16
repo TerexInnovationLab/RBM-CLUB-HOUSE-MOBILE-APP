@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/rbm_card.dart';
 import '../../../shared/widgets/masked_text_widget.dart';
 import 'monthly_progress_bar.dart';
 
@@ -26,44 +27,58 @@ class BalanceSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Current Balance', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 6),
-            MaskedTextWidget(
-              text: CurrencyFormatter.format(currentBalance),
-              mask: 'MWK ••••••',
-              textStyle: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w700),
-              iconColor: AppColors.primaryBlue,
-            ),
-            const SizedBox(height: 12),
-            _row('Monthly Allocation', CurrencyFormatter.format(monthlyAllocation)),
-            _row('Amount Spent', CurrencyFormatter.format(spentAmount)),
-            _row('Remaining Credit', CurrencyFormatter.format(remainingAmount)),
-            _row('Next Reset', Formatters.formatDate(nextReset)),
-            const SizedBox(height: 12),
-            MonthlyProgressBar(spentAmount: spentAmount, allocatedAmount: monthlyAllocation),
-          ],
-        ),
+    return RbmCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('CURRENT BALANCE', style: Theme.of(context).textTheme.labelMedium),
+          const SizedBox(height: 6),
+          MaskedTextWidget(
+            text: CurrencyFormatter.format(currentBalance),
+            mask: 'MWK ••••••',
+            textStyle: Theme.of(context)
+                .textTheme
+                .displaySmall
+                ?.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w700),
+            iconColor: AppColors.primaryBlue,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _metric(context, 'MONTHLY ALLOCATION', CurrencyFormatter.format(monthlyAllocation))),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _metric(context, 'AMOUNT SPENT', CurrencyFormatter.format(spentAmount), isDebit: true),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.circle, size: 8, color: AppColors.warningOrange),
+              const SizedBox(width: 8),
+              Text(
+                'Next reset: ${Formatters.formatDate(nextReset)}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          MonthlyProgressBar(spentAmount: spentAmount, allocatedAmount: monthlyAllocation),
+        ],
       ),
     );
   }
 
-  Widget _row(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(label), Text(value)],
-      ),
+  Widget _metric(BuildContext context, String label, String value, {bool isDebit = false}) {
+    final valueColor = isDebit ? AppColors.dangerRed : AppColors.successGreen;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.textSecondary)),
+        const SizedBox(height: 2),
+        Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: valueColor)),
+      ],
     );
   }
 }
-

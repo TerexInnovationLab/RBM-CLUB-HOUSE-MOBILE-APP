@@ -71,11 +71,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return OfflineBanner(
       child: Scaffold(
         appBar: const RbmAppBar(title: AppStrings.loginTitle),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
               Form(
                 key: _formKey,
                 child: TextFormField(
@@ -110,6 +113,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onBackspace: _backspace,
                       onConfirm: _confirm,
                       confirmEnabled: !_loading && _pin.length == 6,
+                      confirmLabel: 'Log in',
+                      confirmIcon: Icons.lock_open,
                     ),
                   ),
                 ),
@@ -123,11 +128,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: () => context.go(RouteNames.activation),
                 child: const Text('First time? Activate account'),
               ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 }
-

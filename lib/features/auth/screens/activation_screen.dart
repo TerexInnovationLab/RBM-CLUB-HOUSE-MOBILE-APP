@@ -70,13 +70,16 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
         appBar: const RbmAppBar(title: AppStrings.activationTitle),
         body: auth.isLocked
             ? const AppErrorWidget(message: 'Account locked — contact HR to unlock.')
-            : Padding(
-                padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+            : Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                       Text(
                         'Enter your Employee Number and temporary PIN from HR to activate your account.',
                         style: Theme.of(context).textTheme.bodyMedium,
@@ -117,7 +120,9 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                         onPressed: () => context.go(RouteNames.login),
                         child: const Text('Already activated? Log in'),
                       ),
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -125,4 +130,3 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
     );
   }
 }
-

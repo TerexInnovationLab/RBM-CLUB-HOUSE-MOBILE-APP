@@ -6,8 +6,7 @@ abstract final class AppDimensions {
   static const double lg = 24;
   static const double xl = 32;
 
-  static const double cardRadius = 12;
-  static const double buttonRadius = 10;
+  static const double cardRadius = 16;
+  static const double buttonRadius = 8;
   static const double inputRadius = 12;
 }
-

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/rbm_card.dart';
 import '../../../routes/route_names.dart';
 
 /// Quick action shortcuts.
@@ -35,6 +37,14 @@ class QuickActionsRow extends StatelessWidget {
             onTap: () => context.go(RouteNames.wallet),
           ),
         ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _ActionCard(
+            icon: Icons.person_outline,
+            label: 'Profile',
+            onTap: () => context.go(RouteNames.profile),
+          ),
+        ),
       ],
     );
   }
@@ -53,22 +63,22 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final iconBg = AppColors.primaryBlue.withAlpha(26);
+    return RbmCard(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-          child: Column(
-            children: [
-              Icon(icon),
-              const SizedBox(height: 8),
-              Text(label, textAlign: TextAlign.center),
-            ],
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      child: Column(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(14)),
+            child: Icon(icon, color: AppColors.primaryBlue),
           ),
-        ),
+          const SizedBox(height: 10),
+          Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+        ],
       ),
     );
   }
 }
-

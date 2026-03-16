@@ -95,12 +95,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _bootstrap() async {
     try {
       // On Web, secure storage can sometimes hang if there's a configuration issue.
-      // We wrap this in a timeout to ensure the app stays responsive.
-      final results = await Future.wait([
+      // Only apply a timeout on Web to avoid leaving pending timers in widget tests.
+      final bootstrapFuture = Future.wait([
         _storage.readAccessToken(),
         _storage.readStaffProfileJson(),
         _storage.readBiometricEnabled(),
-      ]).timeout(const Duration(seconds: 2));
+      ]);
+      final results = kIsWeb
+          ? await bootstrapFuture.timeout(const Duration(seconds: 2))
+          : await bootstrapFuture;
 
       final access = results[0] as String?;
       final profileJson = results[1] as String?;

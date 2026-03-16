@@ -141,10 +141,13 @@ class _SetPinScreenState extends ConsumerState<SetPinScreen> {
     return OfflineBanner(
       child: Scaffold(
         appBar: const RbmAppBar(title: AppStrings.setPinTitle),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
               Text(
                 _confirming ? 'Confirm your new 6-digit PIN' : 'Create a new secure 6-digit PIN',
                 textAlign: TextAlign.center,
@@ -157,8 +160,12 @@ class _SetPinScreenState extends ConsumerState<SetPinScreen> {
                 onBackspace: _backspace,
                 onConfirm: _confirm,
                 confirmEnabled: !_loading && ((_confirming && _pin2.length == 6) || (!_confirming && _pin1.length == 6)),
+                confirmLabel: _confirming ? 'Activate' : 'Continue',
+                confirmIcon: _confirming ? Icons.check_circle_outline : Icons.arrow_forward,
               ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
