@@ -9,13 +9,12 @@ import 'routes/app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase configuration (google-services / GoogleService-Info) is expected
-  // to be provided by the consuming environment. The app remains usable without
-  // push notifications if initialization fails.
+  // Firebase initialization can sometimes hang on Web if configuration is missing.
+  // We wrap it in a timeout to ensure the app still runs.
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp().timeout(const Duration(seconds: 5));
   } catch (e) {
-    debugPrint('Firebase.initializeApp() skipped/failed: $e');
+    debugPrint('Firebase.initializeApp() timed out or failed: $e');
   }
 
   runApp(const ProviderScope(child: RbmClubStaffApp()));
@@ -29,7 +28,8 @@ class RbmClubStaffApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Initialize FCM handlers (safe no-op if Firebase isn't configured).
-    ref.listen(notificationServiceProvider, (_, next) => next.init());
+    // Use ref.read to get the service and call init without blocking the build.
+    Future.microtask(() => ref.read(notificationServiceProvider).init());
 
     final router = ref.watch(goRouterProvider);
 
@@ -43,4 +43,3 @@ class RbmClubStaffApp extends ConsumerWidget {
     );
   }
 }
-

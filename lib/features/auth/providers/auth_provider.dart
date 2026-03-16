@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/api_service.dart';
@@ -84,7 +85,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 class AuthNotifier extends StateNotifier<AuthState> {
   /// Creates an auth notifier.
   AuthNotifier(this._repository, this._storage, this._biometric) : super(AuthState.initial) {
-    unawaited(_bootstrap());
+    _bootstrap();
   }
 
   final AuthRepository _repository;
@@ -92,25 +93,44 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final BiometricService _biometric;
 
   Future<void> _bootstrap() async {
-    final access = await _storage.readAccessToken();
-    final profileJson = await _storage.readStaffProfileJson();
-    final biometricEnabled = await _storage.readBiometricEnabled();
+    try {
+      // On Web, secure storage can sometimes hang if there's a configuration issue.
+      // We wrap this in a timeout to ensure the app stays responsive.
+      final results = await Future.wait([
+        _storage.readAccessToken(),
+        _storage.readStaffProfileJson(),
+        _storage.readBiometricEnabled(),
+      ]).timeout(const Duration(seconds: 2));
 
-    StaffProfileModel? profile;
-    if (profileJson != null && profileJson.isNotEmpty) {
-      try {
-        profile = StaffProfileModel.fromJson(jsonDecode(profileJson) as Map<String, dynamic>);
-      } catch (_) {}
+      final access = results[0] as String?;
+      final profileJson = results[1] as String?;
+      final biometricEnabled = (results[2] as bool?) ?? false;
+
+      StaffProfileModel? profile;
+      if (profileJson != null && profileJson.isNotEmpty) {
+        try {
+          profile = StaffProfileModel.fromJson(jsonDecode(profileJson) as Map<String, dynamic>);
+        } catch (e) {
+          debugPrint('Error decoding profile: $e');
+        }
+      }
+
+      state = state.copyWith(
+        isBootstrapping: false,
+        isAuthenticated: access != null && access.isNotEmpty,
+        staffProfile: profile,
+        biometricEnabled: biometricEnabled,
+        errorMessage: null,
+        failedAttempts: 0,
+      );
+    } catch (e) {
+      debugPrint('Auth bootstrap failed: $e');
+      // Always set isBootstrapping to false so the user can reach the login screen
+      state = state.copyWith(
+        isBootstrapping: false,
+        isAuthenticated: false,
+      );
     }
-
-    state = state.copyWith(
-      isBootstrapping: false,
-      isAuthenticated: access != null && access.isNotEmpty,
-      staffProfile: profile,
-      biometricEnabled: biometricEnabled,
-      errorMessage: null,
-      failedAttempts: 0,
-    );
   }
 
   /// Performs activation (step 1) which validates staff identity.

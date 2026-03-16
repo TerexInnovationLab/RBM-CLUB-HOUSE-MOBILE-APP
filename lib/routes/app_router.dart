@@ -59,16 +59,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       if (auth.isBootstrapping) return RouteNames.splash;
 
+      // Splash is only for bootstrap. Once bootstrap completes, always move away
+      // from splash to the correct next screen.
+      if (loc == RouteNames.splash) {
+        return auth.isAuthenticated ? RouteNames.home : RouteNames.login;
+      }
+
       final isAuthRoute = loc == RouteNames.login ||
           loc == RouteNames.activation ||
-          loc == RouteNames.setPin ||
-          loc == RouteNames.splash;
+          loc == RouteNames.setPin;
 
       if (!auth.isAuthenticated) {
         return isAuthRoute ? null : RouteNames.login;
       }
 
-      if (auth.isAuthenticated && (loc == RouteNames.login || loc == RouteNames.activation)) {
+      if (auth.isAuthenticated && isAuthRoute) {
         return RouteNames.home;
       }
 
