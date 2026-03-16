@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "299698089228",
+    "project_id": "rbm-club-app",
+    "storage_bucket": "rbm-club-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:299698089228:android:5e9e85e913503b17562d29",
+        "android_client_info": {
+          "package_name": "mw.rbm.clubhouse.rbm_club"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApYfreobrXPCzAc_1300OI3Od_1raq6Xw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
