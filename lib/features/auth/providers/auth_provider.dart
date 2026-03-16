@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../core/services/secure_storage_service.dart';
@@ -136,11 +137,37 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Logs in using a local demo profile (no backend required).
+  Future<void> loginDemo({String? employeeNumber}) async {
+    final emp = (employeeNumber ?? '').trim().isEmpty ? 'EMP-00123' : employeeNumber!.trim();
+    final profile = StaffProfileModel(
+      id: 'demo_staff_1',
+      employeeNumber: emp,
+      fullName: 'John Banda',
+      department: 'Operations',
+      grade: 'G3',
+      email: 'john.banda@rbm.mw',
+      phoneMasked: '+265 ** *** ****',
+      status: 'ACTIVE',
+    );
+
+    await _persistAuth('demo_access_$emp', 'demo_refresh_$emp', profile);
+    state = state.copyWith(
+      isBootstrapping: false,
+      isAuthenticated: true,
+      staffProfile: profile,
+      biometricEnabled: false,
+      failedAttempts: 0,
+      errorMessage: null,
+    );
+  }
+
   /// Performs activation (step 1) which validates staff identity.
   Future<void> activateStep1({
     required String employeeNumber,
     required String temporaryPin,
   }) async {
+    if (AppConfig.isDemo) return;
     state = state.copyWith(errorMessage: null);
     await _repository.activate(
       AuthActivateRequestModel(employeeNumber: employeeNumber, temporaryPin: temporaryPin),
@@ -153,6 +180,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String temporaryPin,
     required String newPin,
   }) async {
+    if (AppConfig.isDemo) {
+      await loginDemo(employeeNumber: employeeNumber);
+      return;
+    }
     state = state.copyWith(errorMessage: null);
     final resp = await _repository.activate(
       AuthActivateRequestModel(
@@ -175,6 +206,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String employeeNumber,
     required String pin,
   }) async {
+    if (AppConfig.isDemo) {
+      await loginDemo(employeeNumber: employeeNumber);
+      return;
+    }
     if (state.isLocked) {
       state = state.copyWith(errorMessage: 'Account locked — contact HR to unlock.');
       return;

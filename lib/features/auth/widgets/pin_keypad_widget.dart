@@ -33,31 +33,31 @@ class PinKeypadWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttons = <Widget>[
-      for (var i = 1; i <= 9; i++) _DigitButton(digit: i, onTap: () => onDigit(i)),
-      const SizedBox.shrink(),
-      _DigitButton(digit: 0, onTap: () => onDigit(0)),
-      _IconButton(
-        icon: Icons.backspace_outlined,
-        onTap: onBackspace,
-      ),
-    ];
-
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
+        constraints: const BoxConstraints(maxWidth: 320),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 3,
-              mainAxisSpacing: 12,
+              mainAxisSpacing: 8,
               crossAxisSpacing: 12,
-              childAspectRatio: 1.35,
-              children: buttons,
+              childAspectRatio: 1.6, // More compact buttons
+              children: [
+                for (var i = 1; i <= 9; i++)
+                  _DigitButton(digit: i, onTap: () => onDigit(i)),
+                const SizedBox.shrink(),
+                _DigitButton(digit: 0, onTap: () => onDigit(0)),
+                _IconButton(
+                  icon: Icons.backspace_outlined,
+                  onTap: onBackspace,
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -85,6 +85,7 @@ class _DigitButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
+        padding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
       child: Text(
@@ -106,6 +107,7 @@ class _IconButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
+        padding: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
       child: Icon(icon),

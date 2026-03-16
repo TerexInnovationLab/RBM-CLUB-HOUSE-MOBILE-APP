@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/validators.dart';
 import '../../../routes/route_names.dart';
@@ -72,63 +73,82 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Scaffold(
         appBar: const RbmAppBar(title: AppStrings.loginTitle),
         body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-              Form(
-                key: _formKey,
-                child: TextFormField(
-                  controller: _employeeController,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.employeeNumberLabel,
-                  ),
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  validator: Validators.employeeNumber,
-                ),
-              ),
-              const SizedBox(height: 18),
-              PinInputWidget(
-                length: 6,
-                valueLength: _pin.length,
-                errorText: auth.errorMessage,
-              ),
-              const SizedBox(height: 18),
-              if (auth.isLocked)
-                Text(
-                  'Account locked — contact HR to unlock.',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                  textAlign: TextAlign.center,
-                )
-              else
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: PinKeypadWidget(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 450),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Form(
+                      key: _formKey,
+                      child: TextFormField(
+                        controller: _employeeController,
+                        decoration: const InputDecoration(
+                          labelText: AppStrings.employeeNumberLabel,
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        validator: Validators.employeeNumber,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    PinInputWidget(
+                      length: 6,
+                      valueLength: _pin.length,
+                      errorText: auth.errorMessage,
+                    ),
+                    const SizedBox(height: 24),
+                    if (auth.isLocked)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          'Account locked — contact HR to unlock.',
+                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    PinKeypadWidget(
                       onDigit: _appendDigit,
                       onBackspace: _backspace,
                       onConfirm: _confirm,
-                      confirmEnabled: !_loading && _pin.length == 6,
+                      confirmEnabled: !_loading && _pin.length == 6 && !auth.isLocked,
                       confirmLabel: 'Log in',
-                      confirmIcon: Icons.lock_open,
+                      confirmIcon: Icons.login_rounded,
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    Text(
+                      auth.isLocked ? '' : 'Attempts remaining: ${auth.remainingAttempts}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: auth.remainingAttempts <= 2
+                                ? Theme.of(context).colorScheme.error
+                                : null,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    if (AppConfig.isDemo) ...[
+                      FilledButton.icon(
+                        onPressed: () async {
+                          await ref
+                              .read(authProvider.notifier)
+                              .loginDemo(employeeNumber: _employeeController.text.trim());
+                          if (context.mounted) context.go(RouteNames.home);
+                        },
+                        icon: const Icon(Icons.play_circle_outline),
+                        label: const Text('Use demo account'),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    TextButton(
+                      onPressed: () => context.go(RouteNames.activation),
+                      child: const Text('First time? Activate account'),
+                    ),
+                  ],
                 ),
-              const SizedBox(height: 12),
-              Text(
-                auth.isLocked ? '' : 'Attempts remaining: ${auth.remainingAttempts}',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => context.go(RouteNames.activation),
-                child: const Text('First time? Activate account'),
-              ),
-                ],
               ),
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/app_error_widget.dart';
@@ -116,6 +117,20 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                         icon: Icons.lock_open,
                       ),
                       const SizedBox(height: 8),
+                      if (AppConfig.isDemo) ...[
+                        FilledButton.icon(
+                          onPressed: () async {
+                            await ref
+                                .read(authProvider.notifier)
+                                .loginDemo(employeeNumber: _employeeController.text.trim());
+                            if (!context.mounted) return;
+                            context.go(RouteNames.home);
+                          },
+                          icon: const Icon(Icons.play_circle_outline),
+                          label: const Text('Use demo account'),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       TextButton(
                         onPressed: () => context.go(RouteNames.login),
                         child: const Text('Already activated? Log in'),

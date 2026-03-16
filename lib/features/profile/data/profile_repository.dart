@@ -1,4 +1,5 @@
 import '../../../core/constants/api_endpoints.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/services/api_service.dart';
 import '../models/staff_profile_model.dart';
 import '../models/trusted_device_model.dart';
@@ -12,6 +13,18 @@ class ProfileRepository {
 
   /// Fetches staff profile.
   Future<StaffProfileModel> fetchProfile() async {
+    if (AppConfig.isDemo || _api.dio.options.baseUrl.isEmpty) {
+      return const StaffProfileModel(
+        id: 'demo_staff_1',
+        employeeNumber: 'EMP-00123',
+        fullName: 'John Banda',
+        department: 'Operations',
+        grade: 'G3',
+        email: 'john.banda@rbm.mw',
+        phoneMasked: '+265 ** *** ****',
+        status: 'ACTIVE',
+      );
+    }
     final resp = await _api.dio.get<Map<String, dynamic>>(ApiEndpoints.profile);
     return StaffProfileModel.fromJson(resp.data ?? const {});
   }
@@ -36,4 +49,3 @@ class ProfileRepository {
         .toList();
   }
 }
-
