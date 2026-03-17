@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +31,16 @@ class _NotificationListScreenState
   final Set<String> _locallyReadIds = <String>{};
   final Set<String> _deletedIds = <String>{};
   bool _markingAllRead = false;
+  OverlayEntry? _toastEntry;
+  Timer? _toastTimer;
+
+  @override
+  void dispose() {
+    _toastTimer?.cancel();
+    _toastEntry?.remove();
+    _toastEntry = null;
+    super.dispose();
+  }
 
   bool _isRead(NotificationModel notification) {
     return notification.isRead || _locallyReadIds.contains(notification.id);
@@ -84,6 +96,74 @@ class _NotificationListScreenState
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  void _showTopToast({
+    required String message,
+    _ToastTone tone = _ToastTone.info,
+  }) {
+    if (!mounted) return;
+
+    _toastTimer?.cancel();
+    _toastEntry?.remove();
+    _toastEntry = null;
+
+    IconData icon;
+    Color start;
+    Color end;
+
+    switch (tone) {
+      case _ToastTone.success:
+        icon = Icons.check_circle_outline_rounded;
+        start = AppColors.successGreen;
+        end = const Color(0xFF1F6B2A);
+        break;
+      case _ToastTone.error:
+        icon = Icons.error_outline_rounded;
+        start = AppColors.dangerRed;
+        end = const Color(0xFF9F1F1F);
+        break;
+      case _ToastTone.info:
+        icon = Icons.info_outline_rounded;
+        start = AppColors.primaryBlue;
+        end = AppColors.secondaryBlue;
+        break;
+    }
+
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return;
+
+    _toastEntry = OverlayEntry(
+      builder: (overlayContext) {
+        final topInset = MediaQuery.of(overlayContext).padding.top + 10;
+        return Positioned(
+          top: topInset,
+          left: 16,
+          right: 16,
+          child: IgnorePointer(
+            child: Material(
+              color: Colors.transparent,
+              child: _TopToastCard(
+                icon: icon,
+                message: message,
+                start: start,
+                end: end,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlay.insert(_toastEntry!);
+    _toastTimer = Timer(const Duration(seconds: 3), _dismissTopToast);
+  }
+
+  void _dismissTopToast() {
+    _toastTimer?.cancel();
+    _toastTimer = null;
+    _toastEntry?.remove();
+    _toastEntry = null;
+  }
+
   Future<void> _markAllAsRead(List<NotificationModel> source) async {
     if (_markingAllRead) return;
 
@@ -96,9 +176,9 @@ class _NotificationListScreenState
       await ref.read(notificationRepositoryProvider).markAllRead();
       ref.invalidate(notificationsProvider);
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to mark all as read right now.')),
+      _showTopToast(
+        message: 'Unable to mark all as read right now.',
+        tone: _ToastTone.error,
       );
     } finally {
       if (mounted) {
@@ -160,11 +240,9 @@ class _NotificationListScreenState
           .deleteNotification(notificationId);
       return true;
     } catch (_) {
-      if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to delete notification right now.'),
-        ),
+      _showTopToast(
+        message: 'Unable to delete notification right now.',
+        tone: _ToastTone.error,
       );
       return false;
     }
@@ -178,12 +256,8 @@ class _NotificationListScreenState
     });
   }
 
-  void _showDeletedSnack() {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Notification deleted.')));
+  void _showDeletedToast() {
+    _showTopToast(message: 'Notification deleted.', tone: _ToastTone.success);
   }
 
   Future<bool> _confirmSwipeDelete(NotificationModel notification) async {
@@ -192,7 +266,7 @@ class _NotificationListScreenState
 
   void _handleSwipeDeleted(NotificationModel notification) {
     _removeLocally(notification.id);
-    _showDeletedSnack();
+    _showDeletedToast();
   }
 
   Future<void> _handleDeleteFromDetails(NotificationModel notification) async {
@@ -200,7 +274,7 @@ class _NotificationListScreenState
     if (!deleted || !mounted) return;
     _removeLocally(notification.id);
     Navigator.of(context).pop();
-    _showDeletedSnack();
+    _showDeletedToast();
   }
 
   void _syncReadStatus(NotificationModel notification) async {
@@ -419,6 +493,68 @@ class _NotificationListScreenState
             message: 'Failed to load notifications: $e',
             onRetry: () => ref.refresh(notificationsProvider),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _ToastTone { info, success, error }
+
+class _TopToastCard extends StatelessWidget {
+  const _TopToastCard({
+    required this.icon,
+    required this.message,
+    required this.start,
+    required this.end,
+  });
+
+  final IconData icon;
+  final String message;
+  final Color start;
+  final Color end;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: LinearGradient(colors: [start, end]),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 14,
+            offset: Offset(0, 8),
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
