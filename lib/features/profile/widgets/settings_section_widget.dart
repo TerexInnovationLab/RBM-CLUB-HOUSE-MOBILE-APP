@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/rbm_card.dart';
+import '../../../core/constants/app_colors.dart';
 
 /// Settings section widget.
 class SettingsSectionWidget extends StatelessWidget {
@@ -19,15 +19,38 @@ class SettingsSectionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RbmCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...children,
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: AppColors.inactive,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
+              ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFEFEFEF)),
+          ),
+          child: Column(
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 0),
+                  child: children[i],
+                ),
+                if (i != children.length - 1)
+                  const Divider(height: 1, thickness: 1, color: Color(0xFFF8F8F8)),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

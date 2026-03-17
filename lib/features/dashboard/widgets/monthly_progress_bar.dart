@@ -42,8 +42,11 @@ class MonthlyProgressBar extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
             Text(
-              '${(used * 100).toStringAsFixed(1)}% used',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.warningOrange),
+              '${(used * 100).toStringAsFixed(1)}%',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.warningOrange,
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
           ],
         ),

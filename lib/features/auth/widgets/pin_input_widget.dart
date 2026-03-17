@@ -31,7 +31,10 @@ class PinInputWidget extends StatelessWidget {
         height: 14,
         decoration: BoxDecoration(
           color: filled ? AppColors.primaryBlue : Colors.transparent,
-          border: Border.all(color: AppColors.borderGray),
+          border: Border.all(
+            color: filled ? AppColors.primaryBlue : AppColors.secondaryBlue,
+            width: 2,
+          ),
           shape: BoxShape.circle,
         ),
       );
@@ -58,4 +61,3 @@ class PinInputWidget extends StatelessWidget {
     );
   }
 }
-

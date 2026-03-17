@@ -4,6 +4,8 @@ import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
   _MyAppState createState() => _MyAppState();
 }
@@ -30,17 +32,17 @@ class _MyAppState extends State<MyApp> {
 
                     if (secureModeToggle == true) {
                       await FlutterWindowManager.addFlags(
-                          FlutterWindowManager.FLAG_SECURE);
+                          FlutterWindowManager.FLAG_SECURE,);
                     } else {
                       await FlutterWindowManager.clearFlags(
-                          FlutterWindowManager.FLAG_SECURE);
+                          FlutterWindowManager.FLAG_SECURE,);
                     }
 
                     setState(() {
                       _secureMode = !_secureMode;
                     });
                   },
-                  child: const Text("Toggle Secure Mode")),
+                  child: const Text('Toggle Secure Mode'),),
             ],
           ),
         ),

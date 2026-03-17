@@ -31,18 +31,41 @@ class BalanceSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('CURRENT BALANCE', style: Theme.of(context).textTheme.labelMedium),
-          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Current balance'.toUpperCase(),
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: AppColors.inactive,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+              ),
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundLight,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Icon(Icons.info_outline, size: 16, color: AppColors.inactive),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           MaskedTextWidget(
             text: CurrencyFormatter.format(currentBalance),
             mask: 'MWK ••••••',
             textStyle: Theme.of(context)
                 .textTheme
                 .displaySmall
-                ?.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w700),
+                ?.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w700, fontSize: 28),
             iconColor: AppColors.primaryBlue,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          Container(height: 1, color: AppColors.backgroundLight),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(child: _metric(context, 'MONTHLY ALLOCATION', CurrencyFormatter.format(monthlyAllocation))),
@@ -63,7 +86,7 @@ class BalanceSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           MonthlyProgressBar(spentAmount: spentAmount, allocatedAmount: monthlyAllocation),
         ],
       ),
@@ -75,7 +98,13 @@ class BalanceSummaryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.textSecondary)),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: AppColors.inactive,
+                letterSpacing: 0.2,
+              ),
+        ),
         const SizedBox(height: 2),
         Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: valueColor)),
       ],

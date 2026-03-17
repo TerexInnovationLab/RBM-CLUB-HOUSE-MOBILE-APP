@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
+
 /// Custom numeric keypad for secure PIN entry.
 class PinKeypadWidget extends StatelessWidget {
   /// Creates a PIN keypad widget.
@@ -44,8 +46,8 @@ class PinKeypadWidget extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 3,
               mainAxisSpacing: 8,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.6, // More compact buttons
+              crossAxisSpacing: 8,
+              childAspectRatio: 1.35,
               children: [
                 for (var i = 1; i <= 9; i++)
                   _DigitButton(digit: i, onTap: () => onDigit(i)),
@@ -86,11 +88,17 @@ class _DigitButton extends StatelessWidget {
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         padding: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimary,
+        side: const BorderSide(color: AppColors.borderGray),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Text(
         '$digit',
-        style: Theme.of(context).textTheme.titleLarge,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
       ),
     );
   }
@@ -108,7 +116,10 @@ class _IconButton extends StatelessWidget {
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         padding: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        backgroundColor: AppColors.backgroundLight,
+        foregroundColor: AppColors.textSecondary,
+        side: const BorderSide(color: AppColors.borderGray),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       child: Icon(icon),
     );

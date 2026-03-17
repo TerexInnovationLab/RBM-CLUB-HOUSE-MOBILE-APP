@@ -104,19 +104,19 @@ class FlutterWindowManager {
   static const int FLAG_TURN_SCREEN_ON = 0x00200000;
 
   static const MethodChannel _channel =
-      const MethodChannel('flutter_windowmanager');
+      MethodChannel('flutter_windowmanager');
 
   /// Adds flags [flags] to the WindowManager.LayoutParams
   static Future<bool> addFlags(int flags) async {
-    return await _channel.invokeMethod("addFlags", {
-      "flags": flags,
+    return await _channel.invokeMethod('addFlags', {
+      'flags': flags,
     });
   }
 
   /// Clears flags [flags] from the WindowManager.LayoutParams
   static Future<bool> clearFlags(int flags) async {
-    return await _channel.invokeMethod("clearFlags", {
-      "flags": flags,
+    return await _channel.invokeMethod('clearFlags', {
+      'flags': flags,
     });
   }
 }

@@ -26,9 +26,12 @@ class RbmTabScaffold extends StatelessWidget {
         context.go(RouteNames.transactions);
         return;
       case 2:
-        context.go(RouteNames.card);
+        context.go(RouteNames.wallet);
         return;
       case 3:
+        context.go(RouteNames.card);
+        return;
+      case 4:
         context.go(RouteNames.profile);
         return;
     }
@@ -55,6 +58,11 @@ class RbmTabScaffold extends StatelessWidget {
             label: 'Transactions',
           ),
           NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet),
+            label: 'Wallet',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.credit_card_outlined),
             selectedIcon: Icon(Icons.credit_card),
             label: 'Card',
@@ -70,4 +78,3 @@ class RbmTabScaffold extends StatelessWidget {
     );
   }
 }
-

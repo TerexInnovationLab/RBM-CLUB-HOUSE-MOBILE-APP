@@ -8,6 +8,8 @@ import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
 import '../../../shared/widgets/rbm_tab_scaffold.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../dashboard/providers/dashboard_provider.dart';
 import '../providers/card_provider.dart';
 import '../widgets/card_actions_row.dart';
 import '../widgets/club_card_widget.dart';
@@ -51,16 +53,23 @@ class _VirtualCardScreenState extends ConsumerState<VirtualCardScreen> {
   @override
   Widget build(BuildContext context) {
     final card = ref.watch(virtualCardProvider);
+    final auth = ref.watch(authProvider);
+    final dashboard = ref.watch(dashboardProvider).valueOrNull;
 
     return OfflineBanner(
       child: RbmTabScaffold(
-        currentIndex: 2,
+        currentIndex: 3,
         appBar: const RbmAppBar(title: AppStrings.cardTitle),
         body: card.when(
           data: (c) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              ClubCardWidget(card: c),
+              ClubCardWidget(
+                card: c,
+                staffDepartment: auth.staffProfile?.department,
+                staffGrade: auth.staffProfile?.grade,
+                availableBalance: dashboard?.currentBalance,
+              ),
               const SizedBox(height: 12),
               const CardActionsRow(),
             ],

@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_config.dart';
-import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../routes/route_names.dart';
-import '../../../shared/widgets/rbm_app_bar.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/pin_input_widget.dart';
@@ -71,85 +70,171 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return OfflineBanner(
       child: Scaffold(
-        appBar: const RbmAppBar(title: AppStrings.loginTitle),
-        body: Center(
+        body: SafeArea(
           child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 450),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Form(
-                      key: _formKey,
-                      child: TextFormField(
-                        controller: _employeeController,
-                        decoration: const InputDecoration(
-                          labelText: AppStrings.employeeNumberLabel,
-                          prefixIcon: Icon(Icons.person_outline),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  color: AppColors.primaryBlue,
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        validator: Validators.employeeNumber,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    PinInputWidget(
-                      length: 6,
-                      valueLength: _pin.length,
-                      errorText: auth.errorMessage,
-                    ),
-                    const SizedBox(height: 24),
-                    if (auth.isLocked)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          'Account locked — contact HR to unlock.',
-                          style: TextStyle(color: Theme.of(context).colorScheme.error),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    PinKeypadWidget(
-                      onDigit: _appendDigit,
-                      onBackspace: _backspace,
-                      onConfirm: _confirm,
-                      confirmEnabled: !_loading && _pin.length == 6 && !auth.isLocked,
-                      confirmLabel: 'Log in',
-                      confirmIcon: Icons.login_rounded,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      auth.isLocked ? '' : 'Attempts remaining: ${auth.remainingAttempts}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: auth.remainingAttempts <= 2
-                                ? Theme.of(context).colorScheme.error
-                                : null,
+                        child: Center(
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'RBM',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    if (AppConfig.isDemo) ...[
-                      FilledButton.icon(
-                        onPressed: () async {
-                          await ref
-                              .read(authProvider.notifier)
-                              .loginDemo(employeeNumber: _employeeController.text.trim());
-                          if (context.mounted) context.go(RouteNames.home);
-                        },
-                        icon: const Icon(Icons.play_circle_outline),
-                        label: const Text('Use demo account'),
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Club House',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Reserve Bank of Malawi',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
-                    TextButton(
-                      onPressed: () => context.go(RouteNames.activation),
-                      child: const Text('First time? Activate account'),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 450),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Employee number'.toUpperCase(),
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                ),
+                          ),
+                          const SizedBox(height: 6),
+                          Form(
+                            key: _formKey,
+                            child: TextFormField(
+                              controller: _employeeController,
+                              decoration: InputDecoration(
+                                hintText: 'EMP-00123',
+                                filled: true,
+                                fillColor: Colors.white,
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: AppColors.secondaryBlue, width: 1.5),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: AppColors.secondaryBlue, width: 1.6),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              ),
+                              autocorrect: false,
+                              enableSuggestions: false,
+                              validator: Validators.employeeNumber,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            '6-digit PIN'.toUpperCase(),
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          PinInputWidget(
+                            length: 6,
+                            valueLength: _pin.length,
+                            errorText: auth.errorMessage,
+                          ),
+                          const SizedBox(height: 18),
+                          if (auth.isLocked)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Text(
+                                'Account locked — contact HR to unlock.',
+                                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          PinKeypadWidget(
+                            onDigit: _appendDigit,
+                            onBackspace: _backspace,
+                            onConfirm: _confirm,
+                            confirmEnabled: !_loading && _pin.length == 6 && !auth.isLocked,
+                            confirmLabel: 'Sign in',
+                            confirmIcon: Icons.login_rounded,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            auth.isLocked ? '' : 'Attempts remaining: ${auth.remainingAttempts}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: auth.remainingAttempts <= 2
+                                      ? Theme.of(context).colorScheme.error
+                                      : AppColors.textSecondary,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          if (AppConfig.isDemo) ...[
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                await ref
+                                    .read(authProvider.notifier)
+                                    .loginDemo(employeeNumber: _employeeController.text.trim());
+                                if (context.mounted) context.go(RouteNames.home);
+                              },
+                              icon: const Icon(Icons.play_circle_outline),
+                              label: const Text('Use demo account'),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          TextButton(
+                            onPressed: () => context.go(RouteNames.activation),
+                            child: const Text('First time? Activate account'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

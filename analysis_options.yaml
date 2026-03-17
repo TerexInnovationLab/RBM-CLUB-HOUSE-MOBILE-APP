@@ -33,6 +33,10 @@ analyzer:
     missing_return: error
     dead_code: warning
     unused_import: warning
+  exclude:
+    # Third-party vendored packages contain their own analysis rules and
+    # shouldn't be analyzed as part of the main app package.
+    - third_party/**
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

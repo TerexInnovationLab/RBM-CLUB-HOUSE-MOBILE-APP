@@ -26,7 +26,7 @@ void main() {
       <Matcher>[
         isMethodCall('addFlags', arguments: <String, int>{
           'flags': FlutterWindowManager.FLAG_SECURE,
-        })
+        },),
       ],
     );
   });
@@ -38,7 +38,7 @@ void main() {
       <Matcher>[
         isMethodCall('clearFlags', arguments: <String, int>{
           'flags': FlutterWindowManager.FLAG_SECURE,
-        })
+        },),
       ],
     );
   });

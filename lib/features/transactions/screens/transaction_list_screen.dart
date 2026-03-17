@@ -23,7 +23,16 @@ class TransactionListScreen extends ConsumerWidget {
     return OfflineBanner(
       child: RbmTabScaffold(
         currentIndex: 1,
-        appBar: const RbmAppBar(title: AppStrings.transactionsTitle),
+        appBar: RbmAppBar(
+          title: AppStrings.transactionsTitle,
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.search),
+              tooltip: 'Search',
+            ),
+          ],
+        ),
         body: tx.when(
           data: (items) => ListView.separated(
             padding: const EdgeInsets.all(16),
@@ -31,9 +40,9 @@ class TransactionListScreen extends ConsumerWidget {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               if (index == 0) {
-                return const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: TransactionFilterBar(),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TransactionFilterBar(transactionCount: items.length),
                 );
               }
               final item = items[index - 1];
