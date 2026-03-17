@@ -18,13 +18,6 @@ class HomeScreen extends ConsumerWidget {
   /// Creates a home screen.
   const HomeScreen({super.key});
 
-  String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
@@ -33,156 +26,62 @@ class HomeScreen extends ConsumerWidget {
     return OfflineBanner(
       child: RbmTabScaffold(
         currentIndex: 0,
+        appBar: _HomeAppBar(
+          fullName: auth.staffProfile?.fullName ?? 'Staff',
+          onNotificationsTap: () => context.go(RouteNames.notifications),
+          onProfileTap: () => context.go(RouteNames.profile),
+        ),
         body: summary.when(
           data: (data) => RefreshIndicator(
             onRefresh: () async => ref.refresh(dashboardProvider.future),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      height: 208,
+            child: Container(
+              color: AppColors.backgroundLight,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                children: [
+                  Container(
+                    constraints: const BoxConstraints(minHeight: 350),
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+                    decoration: BoxDecoration(
                       color: AppColors.primaryBlue,
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-                      child: SafeArea(
-                        bottom: false,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 32,
-                                      height: 32,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                      child: Center(
-                                        child: Container(
-                                          width: 20,
-                                          height: 20,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primaryBlue,
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: const Center(
-                                            child: Text(
-                                              'RBM',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 7,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Club House',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          'Reserve Bank of Malawi',
-                                          style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.6),
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                IconButton(
-                                  onPressed: () => context.go(RouteNames.notifications),
-                                  icon: Container(
-                                    width: 34,
-                                    height: 34,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 18),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _greeting(),
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.75),
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              auth.staffProfile?.fullName ?? '',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              '${auth.staffProfile?.employeeNumber ?? ''} · ${auth.staffProfile?.grade ?? ''} · ${auth.staffProfile?.department ?? ''}',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.55),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x14000000),
+                          blurRadius: 20,
+                          offset: Offset(0, 12),
+                          spreadRadius: -6,
                         ),
-                      ),
+                      ],
                     ),
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: -48,
-                      child: BalanceSummaryCard(
-                        currentBalance: data.currentBalance,
-                        monthlyAllocation: data.monthlyAllocation,
-                        spentAmount: data.spentAmount,
-                        remainingAmount: data.remainingAmount,
-                        nextReset: data.nextReset,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        BalanceSummaryCard(
+                          currentBalance: data.currentBalance,
+                          monthlyAllocation: data.monthlyAllocation,
+                          spentAmount: data.spentAmount,
+                          remainingAmount: data.remainingAmount,
+                          nextReset: data.nextReset,
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          height: 1,
+                          color: Colors.white.withValues(alpha: 0.24),
+                        ),
+                        const SizedBox(height: 14),
+                        const QuickActionsRow(),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 60),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
-                  child: Text(
-                    'Quick actions',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textPrimary),
                   ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: QuickActionsRow(),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: RecentTransactionsPreview(transactions: data.recentTransactions),
-                ),
-                const SizedBox(height: 16),
-              ],
+                  const SizedBox(height: 18),
+                  RecentTransactionsPreview(
+                    transactions: data.recentTransactions,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -190,6 +89,130 @@ class HomeScreen extends ConsumerWidget {
             message: 'Failed to load dashboard: $e',
             onRetry: () => ref.refresh(dashboardProvider),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _HomeAppBar({
+    required this.fullName,
+    required this.onNotificationsTap,
+    required this.onProfileTap,
+  });
+
+  final String fullName;
+  final VoidCallback onNotificationsTap;
+  final VoidCallback onProfileTap;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(74);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      automaticallyImplyLeading: false,
+      toolbarHeight: preferredSize.height,
+      titleSpacing: 16,
+      backgroundColor: AppColors.primaryBlue,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
+      elevation: 0,
+      title: _HomeHeaderContent(
+        fullName: fullName,
+        onNotificationsTap: onNotificationsTap,
+        onProfileTap: onProfileTap,
+      ),
+    );
+  }
+}
+
+class _HomeHeaderContent extends StatelessWidget {
+  const _HomeHeaderContent({
+    required this.fullName,
+    required this.onNotificationsTap,
+    required this.onProfileTap,
+  });
+
+  final String fullName;
+  final VoidCallback onNotificationsTap;
+  final VoidCallback onProfileTap;
+
+  String get _firstName {
+    final trimmed = fullName.trim();
+    if (trimmed.isEmpty) return 'there';
+    return trimmed.split(RegExp(r'\s+')).first;
+  }
+
+  String get _initials {
+    final parts = fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .toList();
+    if (parts.isEmpty) return 'RB';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+        .toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 19,
+          backgroundColor: Colors.white,
+          child: Text(
+            _initials,
+            style: const TextStyle(
+              color: AppColors.primaryBlue,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'Hi, $_firstName!',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        _HeaderIconButton(
+          icon: Icons.notifications_none_rounded,
+          onTap: onNotificationsTap,
+        ),
+        const SizedBox(width: 8),
+        _HeaderIconButton(icon: Icons.tune_rounded, onTap: onProfileTap),
+      ],
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(icon, size: 18, color: AppColors.primaryBlue),
         ),
       ),
     );

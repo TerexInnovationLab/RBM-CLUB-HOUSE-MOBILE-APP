@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../shared/widgets/rbm_card.dart';
-import '../../../shared/widgets/masked_text_widget.dart';
 import 'monthly_progress_bar.dart';
 
 /// Balance summary card.
-class BalanceSummaryCard extends StatelessWidget {
+class BalanceSummaryCard extends StatefulWidget {
   /// Creates a balance summary card.
   const BalanceSummaryCard({
     super.key,
@@ -26,88 +24,104 @@ class BalanceSummaryCard extends StatelessWidget {
   final DateTime nextReset;
 
   @override
+  State<BalanceSummaryCard> createState() => _BalanceSummaryCardState();
+}
+
+class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
+  // Balance is hidden by default when the app opens.
+  bool _isBalanceVisible = false;
+
+  @override
   Widget build(BuildContext context) {
-    return RbmCard(
+    final hasRemaining = widget.remainingAmount >= 0;
+    final remainingPrefix = hasRemaining ? '+' : '-';
+    final mainBalance = _isBalanceVisible
+        ? CurrencyFormatter.format(widget.currentBalance)
+        : 'MWK ******';
+    final remainingValue = _isBalanceVisible
+        ? '$remainingPrefix${CurrencyFormatter.formatTransaction(widget.remainingAmount.abs())}'
+        : 'MWK ******';
+    final spentValue = _isBalanceVisible
+        ? CurrencyFormatter.formatTransaction(widget.spentAmount)
+        : 'MWK ******';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(22, 20, 22, 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(24),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Current balance'.toUpperCase(),
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.inactive,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-              ),
-              Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundLight,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: const Icon(Icons.info_outline, size: 16, color: AppColors.inactive),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          MaskedTextWidget(
-            text: CurrencyFormatter.format(currentBalance),
-            mask: 'MWK ••••••',
-            textStyle: Theme.of(context)
-                .textTheme
-                .displaySmall
-                ?.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.w700, fontSize: 28),
-            iconColor: AppColors.primaryBlue,
-          ),
-          const SizedBox(height: 10),
-          Container(height: 1, color: AppColors.backgroundLight),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(child: _metric(context, 'MONTHLY ALLOCATION', CurrencyFormatter.format(monthlyAllocation))),
-              const SizedBox(width: 12),
               Expanded(
-                child: _metric(context, 'AMOUNT SPENT', CurrencyFormatter.format(spentAmount), isDebit: true),
+                child: Text(
+                  'Monthly Allocation ${CurrencyFormatter.formatTransaction(widget.monthlyAllocation)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppColors.secondaryBlue,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.circle, size: 8, color: AppColors.warningOrange),
-              const SizedBox(width: 8),
-              Text(
-                'Next reset: ${Formatters.formatDate(nextReset)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              IconButton(
+                onPressed: () =>
+                    setState(() => _isBalanceVisible = !_isBalanceVisible),
+                icon: Icon(
+                  _isBalanceVisible
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 20,
+                  color: AppColors.secondaryBlue,
+                ),
+                splashRadius: 18,
+                visualDensity: VisualDensity.compact,
               ),
             ],
           ),
           const SizedBox(height: 10),
-          MonthlyProgressBar(spentAmount: spentAmount, allocatedAmount: monthlyAllocation),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              mainBalance,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.w700,
+                fontSize: 48,
+                letterSpacing: -0.8,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$remainingValue available this cycle',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: hasRemaining
+                  ? AppColors.successGreen
+                  : AppColors.dangerRed,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          MonthlyProgressBar(
+            spentAmount: widget.spentAmount,
+            allocatedAmount: widget.monthlyAllocation,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$spentValue spent | resets ${Formatters.formatDate(widget.nextReset)}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _metric(BuildContext context, String label, String value, {bool isDebit = false}) {
-    final valueColor = isDebit ? AppColors.dangerRed : AppColors.successGreen;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: AppColors.inactive,
-                letterSpacing: 0.2,
-              ),
-        ),
-        const SizedBox(height: 2),
-        Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: valueColor)),
-      ],
     );
   }
 }
