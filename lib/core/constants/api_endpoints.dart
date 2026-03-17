@@ -21,6 +21,7 @@ abstract final class ApiEndpoints {
   static const String virtualCard = '/card/virtual';
 
   static const String notifications = '/notifications';
+  static String notificationById(String id) => '/notifications/$id';
   static String notificationRead(String id) => '/notifications/$id/read';
   static const String notificationsReadAll = '/notifications/read-all';
 
@@ -33,4 +34,3 @@ abstract final class ApiEndpoints {
 
   static const String helpFaq = '/help/faq';
 }
-

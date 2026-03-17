@@ -28,7 +28,7 @@ class HomeScreen extends ConsumerWidget {
         currentIndex: 0,
         appBar: _HomeAppBar(
           fullName: auth.staffProfile?.fullName ?? 'Staff',
-          onNotificationsTap: () => context.go(RouteNames.notifications),
+          onNotificationsTap: () => context.push(RouteNames.notifications),
           onProfileTap: () => context.go(RouteNames.profile),
         ),
         body: summary.when(

@@ -10,7 +10,10 @@ class NotificationRepository {
   final ApiService _api;
 
   /// Fetches notifications.
-  Future<List<NotificationModel>> fetchNotifications({int page = 1, int limit = 20}) async {
+  Future<List<NotificationModel>> fetchNotifications({
+    int page = 1,
+    int limit = 20,
+  }) async {
     if (_api.dio.options.baseUrl.isEmpty) {
       return [
         NotificationModel(
@@ -47,13 +50,24 @@ class NotificationRepository {
   /// Marks a notification as read.
   Future<void> markRead(String id) async {
     if (_api.dio.options.baseUrl.isEmpty) return;
-    await _api.dio.post<Map<String, dynamic>>(ApiEndpoints.notificationRead(id));
+    await _api.dio.post<Map<String, dynamic>>(
+      ApiEndpoints.notificationRead(id),
+    );
   }
 
   /// Marks all as read.
   Future<void> markAllRead() async {
     if (_api.dio.options.baseUrl.isEmpty) return;
-    await _api.dio.post<Map<String, dynamic>>(ApiEndpoints.notificationsReadAll);
+    await _api.dio.post<Map<String, dynamic>>(
+      ApiEndpoints.notificationsReadAll,
+    );
+  }
+
+  /// Deletes a notification.
+  Future<void> deleteNotification(String id) async {
+    if (_api.dio.options.baseUrl.isEmpty) return;
+    await _api.dio.delete<Map<String, dynamic>>(
+      ApiEndpoints.notificationById(id),
+    );
   }
 }
-
