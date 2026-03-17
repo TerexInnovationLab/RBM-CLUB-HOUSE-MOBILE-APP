@@ -30,6 +30,8 @@ class _NotificationListScreenState
   bool _showUnreadOnly = false;
   final Set<String> _locallyReadIds = <String>{};
   final Set<String> _deletedIds = <String>{};
+  final Map<String, _PendingDeletion> _pendingDeletions =
+      <String, _PendingDeletion>{};
   bool _markingAllRead = false;
   OverlayEntry? _toastEntry;
   Timer? _toastTimer;
@@ -256,25 +258,190 @@ class _NotificationListScreenState
     });
   }
 
+  void _restoreLocally(String notificationId, {required bool hadLocalRead}) {
+    setState(() {
+      _deletedIds.remove(notificationId);
+      if (hadLocalRead) {
+        _locallyReadIds.add(notificationId);
+      } else {
+        _locallyReadIds.remove(notificationId);
+      }
+    });
+  }
+
   void _showDeletedToast() {
     _showTopToast(message: 'Notification deleted.', tone: _ToastTone.success);
   }
 
-  Future<bool> _confirmSwipeDelete(NotificationModel notification) async {
-    return _deleteOnServer(notification.id);
-  }
+  Future<void> _handleSwipeDeleted(NotificationModel notification) async {
+    final id = notification.id;
+    final hadLocalRead = _locallyReadIds.contains(id);
 
-  void _handleSwipeDeleted(NotificationModel notification) {
-    _removeLocally(notification.id);
-    _showDeletedToast();
+    _removeLocally(id);
+    _pendingDeletions[id] = _PendingDeletion(hadLocalRead: hadLocalRead);
+
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    final controller = messenger.showSnackBar(
+      SnackBar(
+        content: const Text('Notification deleted'),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'UNDO',
+          onPressed: () {
+            final pending = _pendingDeletions.remove(id);
+            if (pending == null) return;
+            _restoreLocally(id, hadLocalRead: pending.hadLocalRead);
+          },
+        ),
+      ),
+    );
+
+    final autoDismissTimer = Timer(const Duration(seconds: 4), () {
+      if (!_pendingDeletions.containsKey(id)) return;
+      controller.close();
+    });
+
+    final reason = await controller.closed;
+    autoDismissTimer.cancel();
+    final pending = _pendingDeletions.remove(id);
+    if (pending == null || reason == SnackBarClosedReason.action) {
+      return;
+    }
+
+    final deleted = await _deleteOnServer(id);
+    if (!deleted && mounted) {
+      _restoreLocally(id, hadLocalRead: pending.hadLocalRead);
+    }
   }
 
   Future<void> _handleDeleteFromDetails(NotificationModel notification) async {
+    final shouldDelete = await _showDeleteConfirmationDialog();
+    if (!shouldDelete || !mounted) return;
+
     final deleted = await _deleteOnServer(notification.id);
     if (!deleted || !mounted) return;
     _removeLocally(notification.id);
     Navigator.of(context).pop();
     _showDeletedToast();
+  }
+
+  Future<bool> _showDeleteConfirmationDialog() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x30000000),
+                  blurRadius: 24,
+                  offset: Offset(0, 12),
+                  spreadRadius: -6,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(22),
+                    ),
+                    gradient: LinearGradient(
+                      colors: [AppColors.dangerRed, Color(0xFF9D1F24)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.22),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.delete_forever_outlined,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Delete notification?',
+                          style: Theme.of(dialogContext).textTheme.titleLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'This notification will be removed permanently and cannot be restored from this dialog.',
+                    style: Theme.of(dialogContext).textTheme.bodyMedium
+                        ?.copyWith(color: AppColors.textPrimary, height: 1.4),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(false),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFD9DFEC)),
+                            foregroundColor: AppColors.textPrimary,
+                          ),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.dangerRed,
+                          ),
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(true),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                          ),
+                          label: const Text('Delete'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    return shouldDelete ?? false;
   }
 
   void _syncReadStatus(NotificationModel notification) async {
@@ -451,8 +618,7 @@ class _NotificationListScreenState
                                   Dismissible(
                                     key: ValueKey('notification-${item.id}'),
                                     direction: DismissDirection.endToStart,
-                                    confirmDismiss: (_) =>
-                                        _confirmSwipeDelete(item),
+                                    confirmDismiss: (_) async => true,
                                     onDismissed: (_) =>
                                         _handleSwipeDeleted(item),
                                     background: Container(
@@ -868,6 +1034,12 @@ class _DetailLine extends StatelessWidget {
       ],
     );
   }
+}
+
+class _PendingDeletion {
+  const _PendingDeletion({required this.hadLocalRead});
+
+  final bool hadLocalRead;
 }
 
 class _NotificationSection {
