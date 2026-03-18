@@ -17,31 +17,42 @@ class RbmTabScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBar;
   final Widget body;
 
+  static const List<String> _tabRoutes = [
+    RouteNames.home,
+    RouteNames.transactions,
+    RouteNames.card,
+    RouteNames.wallet,
+    RouteNames.profile,
+  ];
+
   void _onTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.go(RouteNames.home);
-        return;
-      case 1:
-        context.go(RouteNames.transactions);
-        return;
-      case 2:
-        context.go(RouteNames.wallet);
-        return;
-      case 3:
-        context.go(RouteNames.card);
-        return;
-      case 4:
-        context.go(RouteNames.profile);
-        return;
+    if (index < 0 || index >= _tabRoutes.length) {
+      return;
     }
+    context.go(_tabRoutes[index]);
+  }
+
+  void _onHorizontalDragEnd(BuildContext context, DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    const velocityThreshold = 260.0;
+    if (velocity.abs() < velocityThreshold) return;
+
+    final swipeDirection = velocity < 0 ? 1 : -1;
+    final nextIndex = currentIndex + swipeDirection;
+    if (nextIndex < 0 || nextIndex >= _tabRoutes.length) return;
+    _onTap(context, nextIndex);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar,
-      body: body,
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragEnd: (details) =>
+            _onHorizontalDragEnd(context, details),
+        child: body,
+      ),
       bottomNavigationBar: _RbmBottomNav(
         currentIndex: currentIndex,
         onTap: (index) => _onTap(context, index),
@@ -71,16 +82,16 @@ class _RbmBottomNav extends StatelessWidget {
       selectedIcon: Icons.receipt_long_rounded,
     ),
     _NavItemData(
-      label: 'Wallet',
-      selectedLabel: 'Wallet',
-      icon: Icons.account_balance_wallet_outlined,
-      selectedIcon: Icons.account_balance_wallet_rounded,
-    ),
-    _NavItemData(
       label: 'Card',
       selectedLabel: 'Card',
       icon: Icons.credit_card_outlined,
       selectedIcon: Icons.credit_card_rounded,
+    ),
+    _NavItemData(
+      label: 'Wallet',
+      selectedLabel: 'Wallet',
+      icon: Icons.account_balance_wallet_outlined,
+      selectedIcon: Icons.account_balance_wallet_rounded,
     ),
     _NavItemData(
       label: 'Profile',

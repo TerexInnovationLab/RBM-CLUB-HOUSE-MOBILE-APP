@@ -58,7 +58,7 @@ class _VirtualCardScreenState extends ConsumerState<VirtualCardScreen> {
 
     return OfflineBanner(
       child: RbmTabScaffold(
-        currentIndex: 3,
+        currentIndex: 2,
         appBar: const RbmAppBar(title: AppStrings.cardTitle),
         body: card.when(
           data: (c) => ListView(

@@ -24,7 +24,7 @@ class WalletDetailScreen extends ConsumerWidget {
 
     return OfflineBanner(
       child: RbmTabScaffold(
-        currentIndex: 2,
+        currentIndex: 3,
         appBar: const RbmAppBar(title: AppStrings.walletTitle),
         body: ListView(
           padding: EdgeInsets.zero,
@@ -35,12 +35,16 @@ class WalletDetailScreen extends ConsumerWidget {
                   WalletCycleCard(summary: m),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-                    child: SpendingChartWidget(spent: m.spentAmount, remaining: m.remainingAmount),
+                    child: SpendingChartWidget(
+                      spent: m.spentAmount,
+                      remaining: m.remainingAmount,
+                    ),
                   ),
                 ],
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => AppErrorWidget(message: 'Failed to load wallet: $e'),
+              error: (e, _) =>
+                  AppErrorWidget(message: 'Failed to load wallet: $e'),
             ),
             const SizedBox(height: 12),
             Padding(
@@ -48,7 +52,8 @@ class WalletDetailScreen extends ConsumerWidget {
               child: history.when(
                 data: (items) => AllocationHistoryList(items: items),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => AppErrorWidget(message: 'Failed to load history: $e'),
+                error: (e, _) =>
+                    AppErrorWidget(message: 'Failed to load history: $e'),
               ),
             ),
             const SizedBox(height: 12),
