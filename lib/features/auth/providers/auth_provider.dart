@@ -85,15 +85,19 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 /// Auth state notifier.
 class AuthNotifier extends StateNotifier<AuthState> {
   /// Creates an auth notifier.
-  AuthNotifier(this._repository, this._storage, this._biometric) : super(AuthState.initial) {
+  AuthNotifier(this._repository, this._storage, this._biometric)
+    : super(AuthState.initial) {
     _bootstrap();
   }
+
+  static const Duration _minimumSplashDuration = Duration(seconds: 5);
 
   final AuthRepository _repository;
   final SecureStorageService _storage;
   final BiometricService _biometric;
 
   Future<void> _bootstrap() async {
+    final startedAt = DateTime.now();
     try {
       // On Web, secure storage can sometimes hang if there's a configuration issue.
       // Only apply a timeout on Web to avoid leaving pending timers in widget tests.
@@ -113,12 +117,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       StaffProfileModel? profile;
       if (profileJson != null && profileJson.isNotEmpty) {
         try {
-          profile = StaffProfileModel.fromJson(jsonDecode(profileJson) as Map<String, dynamic>);
+          profile = StaffProfileModel.fromJson(
+            jsonDecode(profileJson) as Map<String, dynamic>,
+          );
         } catch (e) {
           debugPrint('Error decoding profile: $e');
         }
       }
 
+      await _waitForMinimumSplashDuration(startedAt);
       state = state.copyWith(
         isBootstrapping: false,
         isAuthenticated: access != null && access.isNotEmpty,
@@ -130,16 +137,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       debugPrint('Auth bootstrap failed: $e');
       // Always set isBootstrapping to false so the user can reach the login screen
-      state = state.copyWith(
-        isBootstrapping: false,
-        isAuthenticated: false,
-      );
+      await _waitForMinimumSplashDuration(startedAt);
+      state = state.copyWith(isBootstrapping: false, isAuthenticated: false);
+    }
+  }
+
+  Future<void> _waitForMinimumSplashDuration(DateTime startedAt) async {
+    final elapsed = DateTime.now().difference(startedAt);
+    final remaining = _minimumSplashDuration - elapsed;
+    if (remaining > Duration.zero) {
+      await Future.delayed(remaining);
     }
   }
 
   /// Logs in using a local demo profile (no backend required).
   Future<void> loginDemo({String? employeeNumber}) async {
-    final emp = (employeeNumber ?? '').trim().isEmpty ? 'EMP-00123' : employeeNumber!.trim();
+    final emp = (employeeNumber ?? '').trim().isEmpty
+        ? 'EMP-00123'
+        : employeeNumber!.trim();
     final profile = StaffProfileModel(
       id: 'demo_staff_1',
       employeeNumber: emp,
@@ -170,7 +185,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (AppConfig.isDemo) return;
     state = state.copyWith(errorMessage: null);
     await _repository.activate(
-      AuthActivateRequestModel(employeeNumber: employeeNumber, temporaryPin: temporaryPin),
+      AuthActivateRequestModel(
+        employeeNumber: employeeNumber,
+        temporaryPin: temporaryPin,
+      ),
     );
   }
 
@@ -211,7 +229,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
     if (state.isLocked) {
-      state = state.copyWith(errorMessage: 'Account locked — contact HR to unlock.');
+      state = state.copyWith(
+        errorMessage: 'Account locked — contact HR to unlock.',
+      );
       return;
     }
 
@@ -220,7 +240,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final resp = await _repository.login(
         AuthLoginRequestModel(employeeNumber: employeeNumber, pin: pin),
       );
-      await _persistAuth(resp.accessToken, resp.refreshToken, resp.staffProfile);
+      await _persistAuth(
+        resp.accessToken,
+        resp.refreshToken,
+        resp.staffProfile,
+      );
       state = state.copyWith(
         isAuthenticated: true,
         staffProfile: resp.staffProfile,
@@ -294,7 +318,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String refreshToken,
     StaffProfileModel profile,
   ) async {
-    await _storage.writeTokens(accessToken: accessToken, refreshToken: refreshToken);
+    await _storage.writeTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
     await _storage.writeStaffProfileJson(jsonEncode(profile.toJson()));
   }
 }
