@@ -13,6 +13,7 @@ import '../features/help/screens/faq_screen.dart';
 import '../features/help/screens/help_screen.dart';
 import '../features/notifications/screens/notification_list_screen.dart';
 import '../features/profile/screens/change_pin_screen.dart';
+import '../features/profile/screens/edit_profile_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/profile/screens/settings_screen.dart';
 import '../features/profile/screens/trusted_devices_screen.dart';
@@ -65,7 +66,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return auth.isAuthenticated ? RouteNames.home : RouteNames.login;
       }
 
-      final isAuthRoute = loc == RouteNames.login ||
+      final isAuthRoute =
+          loc == RouteNames.login ||
           loc == RouteNames.activation ||
           loc == RouteNames.setPin;
 
@@ -97,7 +99,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final extra = state.extra;
           if (extra is SetPinArgs) return SetPinScreen(args: extra);
-          return const SetPinScreen(args: SetPinArgs(employeeNumber: '', temporaryPin: ''));
+          return const SetPinScreen(
+            args: SetPinArgs(employeeNumber: '', temporaryPin: ''),
+          );
         },
       ),
       GoRoute(
@@ -114,14 +118,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: ':id',
-            builder: (context, state) =>
-                TransactionDetailScreen(transactionId: state.pathParameters['id'] ?? ''),
+            builder: (context, state) => TransactionDetailScreen(
+              transactionId: state.pathParameters['id'] ?? '',
+            ),
           ),
         ],
       ),
       GoRoute(
         path: RouteNames.receipt,
-        builder: (context, state) => ReceiptScreen(receiptId: state.pathParameters['id'] ?? ''),
+        builder: (context, state) =>
+            ReceiptScreen(receiptId: state.pathParameters['id'] ?? ''),
       ),
       GoRoute(
         path: RouteNames.card,
@@ -142,6 +148,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileScreen(),
         routes: [
           GoRoute(
+            path: 'edit',
+            builder: (context, state) => const EditProfileScreen(),
+          ),
+          GoRoute(
             path: 'change-pin',
             builder: (context, state) => const ChangePinScreen(),
           ),
@@ -159,10 +169,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.help,
         builder: (context, state) => const HelpScreen(),
         routes: [
-          GoRoute(
-            path: 'faq',
-            builder: (context, state) => const FaqScreen(),
-          ),
+          GoRoute(path: 'faq', builder: (context, state) => const FaqScreen()),
         ],
       ),
     ],

@@ -295,6 +295,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(biometricEnabled: enabled, errorMessage: null);
   }
 
+  /// Updates persisted staff profile details locally.
+  Future<void> updateStaffProfile({
+    required String fullName,
+    required String email,
+    required String phoneMasked,
+    required String department,
+    required String grade,
+  }) async {
+    final current = state.staffProfile;
+    if (current == null) return;
+
+    final updated = StaffProfileModel(
+      id: current.id,
+      employeeNumber: current.employeeNumber,
+      fullName: fullName.trim(),
+      department: department.trim(),
+      grade: grade.trim(),
+      email: email.trim(),
+      phoneMasked: phoneMasked.trim(),
+      status: current.status,
+    );
+
+    await _storage.writeStaffProfileJson(jsonEncode(updated.toJson()));
+    state = state.copyWith(staffProfile: updated, errorMessage: null);
+  }
+
   /// Logs out locally (and best-effort remote).
   Future<void> logout() async {
     final refresh = await _storage.readRefreshToken();

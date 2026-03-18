@@ -9,6 +9,7 @@ class RbmAppBar extends StatelessWidget implements PreferredSizeWidget {
   const RbmAppBar({
     super.key,
     this.title = AppStrings.appName,
+    this.centerTitle = false,
     this.unreadCount = 0,
     this.onNotificationsTap,
     this.actions,
@@ -16,6 +17,9 @@ class RbmAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   /// Title.
   final String title;
+
+  /// Whether the title should be centered.
+  final bool centerTitle;
 
   /// Unread notifications.
   final int unreadCount;
@@ -29,6 +33,7 @@ class RbmAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      centerTitle: centerTitle,
       title: Text(title),
       actions: [
         if (onNotificationsTap != null)

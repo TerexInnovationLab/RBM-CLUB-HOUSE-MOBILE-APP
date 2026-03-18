@@ -14,10 +14,10 @@ abstract final class RouteNames {
   static const String fullscreenQr = '/card/qr';
   static const String notifications = '/notifications';
   static const String profile = '/profile';
+  static const String editProfile = '/profile/edit';
   static const String changePin = '/profile/change-pin';
   static const String settings = '/profile/settings';
   static const String trustedDevices = '/profile/trusted-devices';
   static const String help = '/help';
   static const String faq = '/help/faq';
 }
-
