@@ -10,6 +10,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../routes/route_names.dart';
 import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/top_snackbar.dart';
 import '../models/notification_model.dart';
 import '../providers/notification_provider.dart';
 import '../widgets/notification_list_item.dart';
@@ -33,16 +34,6 @@ class _NotificationListScreenState
   final Map<String, _PendingDeletion> _pendingDeletions =
       <String, _PendingDeletion>{};
   bool _markingAllRead = false;
-  OverlayEntry? _toastEntry;
-  Timer? _toastTimer;
-
-  @override
-  void dispose() {
-    _toastTimer?.cancel();
-    _toastEntry?.remove();
-    _toastEntry = null;
-    super.dispose();
-  }
 
   bool _isRead(NotificationModel notification) {
     return notification.isRead || _locallyReadIds.contains(notification.id);
@@ -101,69 +92,23 @@ class _NotificationListScreenState
   void _showTopToast({
     required String message,
     _ToastTone tone = _ToastTone.info,
+    Duration duration = const Duration(seconds: 3),
+    TopSnackBarAction? action,
   }) {
     if (!mounted) return;
+    final mappedTone = switch (tone) {
+      _ToastTone.info => TopSnackBarTone.info,
+      _ToastTone.success => TopSnackBarTone.success,
+      _ToastTone.error => TopSnackBarTone.error,
+    };
 
-    _toastTimer?.cancel();
-    _toastEntry?.remove();
-    _toastEntry = null;
-
-    IconData icon;
-    Color start;
-    Color end;
-
-    switch (tone) {
-      case _ToastTone.success:
-        icon = Icons.check_circle_outline_rounded;
-        start = AppColors.successGreen;
-        end = const Color(0xFF1F6B2A);
-        break;
-      case _ToastTone.error:
-        icon = Icons.error_outline_rounded;
-        start = AppColors.dangerRed;
-        end = const Color(0xFF9F1F1F);
-        break;
-      case _ToastTone.info:
-        icon = Icons.info_outline_rounded;
-        start = AppColors.primaryBlue;
-        end = AppColors.secondaryBlue;
-        break;
-    }
-
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
-    if (overlay == null) return;
-
-    _toastEntry = OverlayEntry(
-      builder: (overlayContext) {
-        final topInset = MediaQuery.of(overlayContext).padding.top + 10;
-        return Positioned(
-          top: topInset,
-          left: 16,
-          right: 16,
-          child: IgnorePointer(
-            child: Material(
-              color: Colors.transparent,
-              child: _TopToastCard(
-                icon: icon,
-                message: message,
-                start: start,
-                end: end,
-              ),
-            ),
-          ),
-        );
-      },
+    TopSnackBar.show(
+      context,
+      message: message,
+      tone: mappedTone,
+      duration: duration,
+      action: action,
     );
-
-    overlay.insert(_toastEntry!);
-    _toastTimer = Timer(const Duration(seconds: 3), _dismissTopToast);
-  }
-
-  void _dismissTopToast() {
-    _toastTimer?.cancel();
-    _toastTimer = null;
-    _toastEntry?.remove();
-    _toastEntry = null;
   }
 
   Future<void> _markAllAsRead(List<NotificationModel> source) async {
@@ -281,39 +226,29 @@ class _NotificationListScreenState
     _pendingDeletions[id] = _PendingDeletion(hadLocalRead: hadLocalRead);
 
     if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    final controller = messenger.showSnackBar(
-      SnackBar(
-        content: const Text('Notification deleted'),
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'UNDO',
-          onPressed: () {
-            final pending = _pendingDeletions.remove(id);
-            if (pending == null) return;
-            _restoreLocally(id, hadLocalRead: pending.hadLocalRead);
-          },
-        ),
+
+    _showTopToast(
+      message: 'Notification deleted.',
+      tone: _ToastTone.success,
+      duration: const Duration(seconds: 4),
+      action: TopSnackBarAction(
+        label: 'UNDO',
+        onPressed: () {
+          final pending = _pendingDeletions.remove(id);
+          if (pending == null) return;
+          _restoreLocally(id, hadLocalRead: pending.hadLocalRead);
+        },
       ),
     );
 
-    final autoDismissTimer = Timer(const Duration(seconds: 4), () {
-      if (!_pendingDeletions.containsKey(id)) return;
-      controller.close();
+    Timer(const Duration(seconds: 4), () async {
+      final pending = _pendingDeletions.remove(id);
+      if (pending == null) return;
+      final deleted = await _deleteOnServer(id);
+      if (!deleted && mounted) {
+        _restoreLocally(id, hadLocalRead: pending.hadLocalRead);
+      }
     });
-
-    final reason = await controller.closed;
-    autoDismissTimer.cancel();
-    final pending = _pendingDeletions.remove(id);
-    if (pending == null || reason == SnackBarClosedReason.action) {
-      return;
-    }
-
-    final deleted = await _deleteOnServer(id);
-    if (!deleted && mounted) {
-      _restoreLocally(id, hadLocalRead: pending.hadLocalRead);
-    }
   }
 
   Future<void> _handleDeleteFromDetails(NotificationModel notification) async {
@@ -666,66 +601,6 @@ class _NotificationListScreenState
 }
 
 enum _ToastTone { info, success, error }
-
-class _TopToastCard extends StatelessWidget {
-  const _TopToastCard({
-    required this.icon,
-    required this.message,
-    required this.start,
-    required this.end,
-  });
-
-  final IconData icon;
-  final String message;
-  final Color start;
-  final Color end;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(colors: [start, end]),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 14,
-            offset: Offset(0, 8),
-            spreadRadius: -4,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _FilterCountChip extends StatelessWidget {
   const _FilterCountChip({

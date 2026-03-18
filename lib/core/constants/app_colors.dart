@@ -2,30 +2,36 @@ import 'package:flutter/material.dart';
 
 /// RBM design system colors.
 abstract final class AppColors {
-  /// #003A8F — App bar, greeting, primary.
+  /// #003A8F - App bar, greeting, primary.
   static const Color primaryBlue = Color(0xFF003A8F);
 
-  /// #0056B3 — Buttons, links, CTAs.
+  /// #0056B3 - Buttons, links, CTAs.
   static const Color secondaryBlue = Color(0xFF0056B3);
 
+  /// #2E7D32 - Success state.
   static const Color successGreen = Color(0xFF2E7D32);
 
-  /// #F9A825 — Warnings, badges, reset.
+  /// #F9A825 - Warning state.
   static const Color warningOrange = Color(0xFFF9A825);
+
+  /// #C62828 - Error state.
   static const Color dangerRed = Color(0xFFC62828);
 
-  /// #F4F6F8 — Page background, input fills.
+  /// #F4F6F8 - Light gray background.
   static const Color backgroundLight = Color(0xFFF4F6F8);
-  static const Color surfaceLight = Colors.white;
 
+  /// #FFFFFF - White page/content background.
+  static const Color backgroundWhite = Color(0xFFFFFFFF);
+
+  static const Color surfaceLight = Colors.white;
   static const Color borderGray = Color(0xFFE0E0E0);
 
-  /// #333333 — Body text, headings.
+  /// #333333 - Primary body text.
   static const Color textPrimary = Color(0xFF333333);
 
   static const Color textSecondary = Color(0xFF666666);
 
-  /// #999999 — Inactive navigation tab labels/icons.
+  /// #999999 - Inactive labels/icons.
   static const Color inactive = Color(0xFF999999);
 
   static const Color darkSurface = Color(0xFF121318);

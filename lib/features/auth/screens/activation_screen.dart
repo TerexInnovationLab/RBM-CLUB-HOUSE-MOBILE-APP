@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
 import '../../../shared/widgets/rbm_button.dart';
 import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/top_snackbar.dart';
 import '../../../routes/route_names.dart';
 import '../providers/auth_provider.dart';
 import 'set_pin_screen.dart';
@@ -40,7 +41,9 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _loading = true);
     try {
-      await ref.read(authProvider.notifier).activateStep1(
+      await ref
+          .read(authProvider.notifier)
+          .activateStep1(
             employeeNumber: _employeeController.text.trim(),
             temporaryPin: _tempPinController.text.trim(),
           );
@@ -54,8 +57,10 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Activation failed: $e')),
+      TopSnackBar.show(
+        context,
+        message: 'Activation failed: $e',
+        tone: TopSnackBarTone.error,
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -70,7 +75,9 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
       child: Scaffold(
         appBar: const RbmAppBar(title: AppStrings.activationTitle),
         body: auth.isLocked
-            ? const AppErrorWidget(message: 'Account locked — contact HR to unlock.')
+            ? const AppErrorWidget(
+                message: 'Account locked — contact HR to unlock.',
+              )
             : Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 520),
@@ -81,60 +88,63 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                      Text(
-                        'Enter your Employee Number and temporary PIN from HR to activate your account.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _employeeController,
-                        decoration: const InputDecoration(
-                          labelText: AppStrings.employeeNumberLabel,
-                        ),
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        textInputAction: TextInputAction.next,
-                        validator: Validators.employeeNumber,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _tempPinController,
-                        decoration: const InputDecoration(
-                          labelText: AppStrings.temporaryPinLabel,
-                        ),
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        obscureText: true,
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Temporary PIN is required.'
-                            : null,
-                      ),
-                      const Spacer(),
-                      RbmButton(
-                        label: AppStrings.continueLabel,
-                        onPressed: _activate,
-                        isLoading: _loading,
-                        icon: Icons.lock_open,
-                      ),
-                      const SizedBox(height: 8),
-                      if (AppConfig.isDemo) ...[
-                        FilledButton.icon(
-                          onPressed: () async {
-                            await ref
-                                .read(authProvider.notifier)
-                                .loginDemo(employeeNumber: _employeeController.text.trim());
-                            if (!context.mounted) return;
-                            context.go(RouteNames.home);
-                          },
-                          icon: const Icon(Icons.play_circle_outline),
-                          label: const Text('Use demo account'),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                      TextButton(
-                        onPressed: () => context.go(RouteNames.login),
-                        child: const Text('Already activated? Log in'),
-                      ),
+                          Text(
+                            'Enter your Employee Number and temporary PIN from HR to activate your account.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _employeeController,
+                            decoration: const InputDecoration(
+                              labelText: AppStrings.employeeNumberLabel,
+                            ),
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            textInputAction: TextInputAction.next,
+                            validator: Validators.employeeNumber,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _tempPinController,
+                            decoration: const InputDecoration(
+                              labelText: AppStrings.temporaryPinLabel,
+                            ),
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            obscureText: true,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Temporary PIN is required.'
+                                : null,
+                          ),
+                          const Spacer(),
+                          RbmButton(
+                            label: AppStrings.continueLabel,
+                            onPressed: _activate,
+                            isLoading: _loading,
+                            icon: Icons.lock_open,
+                          ),
+                          const SizedBox(height: 8),
+                          if (AppConfig.isDemo) ...[
+                            FilledButton.icon(
+                              onPressed: () async {
+                                await ref
+                                    .read(authProvider.notifier)
+                                    .loginDemo(
+                                      employeeNumber: _employeeController.text
+                                          .trim(),
+                                    );
+                                if (!context.mounted) return;
+                                context.go(RouteNames.home);
+                              },
+                              icon: const Icon(Icons.play_circle_outline),
+                              label: const Text('Use demo account'),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          TextButton(
+                            onPressed: () => context.go(RouteNames.login),
+                            child: const Text('Already activated? Log in'),
+                          ),
                         ],
                       ),
                     ),

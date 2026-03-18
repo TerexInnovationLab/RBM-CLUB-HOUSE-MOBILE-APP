@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/top_snackbar.dart';
 import '../../auth/widgets/pin_input_widget.dart';
 import '../../auth/widgets/pin_keypad_widget.dart';
 
@@ -83,8 +84,10 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('PIN change request submitted.')),
+    TopSnackBar.show(
+      context,
+      message: 'PIN change request submitted.',
+      tone: TopSnackBarTone.success,
     );
     Navigator.of(context).pop();
   }

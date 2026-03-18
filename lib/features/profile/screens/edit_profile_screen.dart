@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/top_snackbar.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 
@@ -61,8 +62,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             grade: profile.grade,
           );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Personal details updated.')),
+      TopSnackBar.show(
+        context,
+        message: 'Personal details updated.',
+        tone: TopSnackBarTone.success,
       );
       context.pop();
     } finally {

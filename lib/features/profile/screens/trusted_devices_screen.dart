@@ -7,6 +7,7 @@ import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/confirmation_dialog.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
+import '../../../shared/widgets/top_snackbar.dart';
 import '../models/trusted_device_model.dart';
 import '../providers/profile_provider.dart';
 
@@ -45,16 +46,17 @@ class _TrustedDevicesScreenState extends ConsumerState<TrustedDevicesScreen> {
     if (ok != true || !mounted) return;
 
     setState(() => _hiddenDeviceIds.add(device.deviceId));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${device.deviceName} removed.'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            if (!mounted) return;
-            setState(() => _hiddenDeviceIds.remove(device.deviceId));
-          },
-        ),
+    TopSnackBar.show(
+      context,
+      message: '${device.deviceName} removed.',
+      tone: TopSnackBarTone.warning,
+      duration: const Duration(seconds: 4),
+      action: TopSnackBarAction(
+        label: 'UNDO',
+        onPressed: () {
+          if (!mounted) return;
+          setState(() => _hiddenDeviceIds.remove(device.deviceId));
+        },
       ),
     );
   }

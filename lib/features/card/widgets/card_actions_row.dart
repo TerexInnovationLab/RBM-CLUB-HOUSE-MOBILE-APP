@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../routes/route_names.dart';
+import '../../../shared/widgets/top_snackbar.dart';
 
 /// Virtual card actions.
 class CardActionsRow extends StatelessWidget {
@@ -10,8 +11,10 @@ class CardActionsRow extends StatelessWidget {
   const CardActionsRow({super.key});
 
   void _comingSoon(BuildContext context, String label) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label — coming soon')),
+    TopSnackBar.show(
+      context,
+      message: '$label coming soon.',
+      tone: TopSnackBarTone.info,
     );
   }
 
@@ -95,17 +98,20 @@ class _ActionTile extends StatelessWidget {
             Container(
               width: 32,
               height: 32,
-              decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Icon(icon, color: iconColor, size: 18),
             ),
             const SizedBox(height: 6),
             Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                  ),
+                color: AppColors.textSecondary,
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

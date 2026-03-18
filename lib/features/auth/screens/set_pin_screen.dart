@@ -8,6 +8,7 @@ import '../../../core/utils/validators.dart';
 import '../../../routes/route_names.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
 import '../../../shared/widgets/offline_banner.dart';
+import '../../../shared/widgets/top_snackbar.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/pin_input_widget.dart';
 import '../widgets/pin_keypad_widget.dart';
@@ -93,7 +94,9 @@ class _SetPinScreenState extends ConsumerState<SetPinScreen> {
 
     setState(() => _loading = true);
     try {
-      await ref.read(authProvider.notifier).activateStep2(
+      await ref
+          .read(authProvider.notifier)
+          .activateStep2(
             employeeNumber: widget.args.employeeNumber,
             temporaryPin: widget.args.temporaryPin,
             newPin: _pin1,
@@ -102,8 +105,10 @@ class _SetPinScreenState extends ConsumerState<SetPinScreen> {
       await _promptBiometricIfSupported();
       if (!mounted) return;
       context.go(RouteNames.home);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account activated successfully.')),
+      TopSnackBar.show(
+        context,
+        message: 'Account activated successfully.',
+        tone: TopSnackBarTone.success,
       );
     } catch (e) {
       setState(() => _error = 'Activation failed: $e');
@@ -122,10 +127,18 @@ class _SetPinScreenState extends ConsumerState<SetPinScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Enable biometric login?'),
-        content: const Text('Use fingerprint/Face ID for faster login on this device.'),
+        content: const Text(
+          'Use fingerprint/Face ID for faster login on this device.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Not now')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Enable')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Enable'),
+          ),
         ],
       ),
     );
@@ -148,21 +161,32 @@ class _SetPinScreenState extends ConsumerState<SetPinScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-              Text(
-                _confirming ? 'Confirm your new 6-digit PIN' : 'Create a new secure 6-digit PIN',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 18),
-              PinInputWidget(length: 6, valueLength: len, errorText: _error),
-              const Spacer(),
-              PinKeypadWidget(
-                onDigit: _appendDigit,
-                onBackspace: _backspace,
-                onConfirm: _confirm,
-                confirmEnabled: !_loading && ((_confirming && _pin2.length == 6) || (!_confirming && _pin1.length == 6)),
-                confirmLabel: _confirming ? 'Activate' : 'Continue',
-                confirmIcon: _confirming ? Icons.check_circle_outline : Icons.arrow_forward,
-              ),
+                  Text(
+                    _confirming
+                        ? 'Confirm your new 6-digit PIN'
+                        : 'Create a new secure 6-digit PIN',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 18),
+                  PinInputWidget(
+                    length: 6,
+                    valueLength: len,
+                    errorText: _error,
+                  ),
+                  const Spacer(),
+                  PinKeypadWidget(
+                    onDigit: _appendDigit,
+                    onBackspace: _backspace,
+                    onConfirm: _confirm,
+                    confirmEnabled:
+                        !_loading &&
+                        ((_confirming && _pin2.length == 6) ||
+                            (!_confirming && _pin1.length == 6)),
+                    confirmLabel: _confirming ? 'Activate' : 'Continue',
+                    confirmIcon: _confirming
+                        ? Icons.check_circle_outline
+                        : Icons.arrow_forward,
+                  ),
                 ],
               ),
             ),
