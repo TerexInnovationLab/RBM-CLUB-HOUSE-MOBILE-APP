@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
+import '../../profile/providers/app_settings_provider.dart';
 import '../models/monthly_summary_model.dart';
 
 /// Displays the current wallet cycle.
-class WalletCycleCard extends StatelessWidget {
+class WalletCycleCard extends ConsumerWidget {
   /// Creates a wallet cycle card.
   const WalletCycleCard({super.key, required this.summary});
 
@@ -14,11 +16,29 @@ class WalletCycleCard extends StatelessWidget {
   final MonthlySummaryModel summary;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsProvider);
+    final maskAmounts = settings.amountMasking;
+
     final used = summary.allocatedAmount <= 0
         ? 0.0
         : (summary.spentAmount / summary.allocatedAmount).clamp(0.0, 1.0);
-    final daysRemaining = summary.periodEnd.toLocal().difference(DateTime.now()).inDays;
+    final daysRemaining = summary.periodEnd
+        .toLocal()
+        .difference(DateTime.now())
+        .inDays;
+
+    final available = maskAmounts
+        ? 'MWK ******'
+        : CurrencyFormatter.format(
+            summary.remainingAmount,
+          ).replaceFirst('.00', '');
+    final allocated = maskAmounts
+        ? 'MWK ******'
+        : CurrencyFormatter.format(summary.allocatedAmount);
+    final spent = maskAmounts
+        ? 'MWK ******'
+        : CurrencyFormatter.format(summary.spentAmount);
 
     return Container(
       color: AppColors.primaryBlue,
@@ -53,11 +73,15 @@ class WalletCycleCard extends StatelessWidget {
                     letterSpacing: -0.5,
                   ),
                   children: [
-                    TextSpan(text: CurrencyFormatter.format(summary.remainingAmount).replaceFirst('.00', '')),
-                    const TextSpan(
-                      text: '.00',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-                    ),
+                    TextSpan(text: available),
+                    if (!maskAmounts)
+                      const TextSpan(
+                        text: '.00',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -65,17 +89,11 @@ class WalletCycleCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _metric(
-                      label: 'Allocated',
-                      value: CurrencyFormatter.format(summary.allocatedAmount),
-                    ),
+                    child: _metric(label: 'Allocated', value: allocated),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _metric(
-                      label: 'Spent',
-                      value: CurrencyFormatter.format(summary.spentAmount),
-                    ),
+                    child: _metric(label: 'Spent', value: spent),
                   ),
                 ],
               ),
@@ -85,11 +103,18 @@ class WalletCycleCard extends StatelessWidget {
                 children: [
                   Text(
                     'Monthly usage',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 10),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.55),
+                      fontSize: 10,
+                    ),
                   ),
                   Text(
                     '${(used * 100).toStringAsFixed(1)}%',
-                    style: const TextStyle(color: AppColors.warningOrange, fontSize: 10, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      color: AppColors.warningOrange,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -99,14 +124,20 @@ class WalletCycleCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: used,
                   backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.warningOrange),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.warningOrange,
+                  ),
                   minHeight: 5,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Next reset: ${Formatters.formatDate(summary.periodEnd)} · ${daysRemaining < 0 ? 0 : daysRemaining} days remaining',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 10),
+                'Next reset: ${Formatters.formatDate(summary.periodEnd)} | '
+                '${daysRemaining < 0 ? 0 : daysRemaining} days remaining',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.45),
+                  fontSize: 10,
+                ),
               ),
             ],
           ),
@@ -127,12 +158,19 @@ class WalletCycleCard extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 9),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 9,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

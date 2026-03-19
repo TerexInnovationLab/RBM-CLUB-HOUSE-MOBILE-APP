@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../routes/route_names.dart';
+import '../../profile/providers/app_settings_provider.dart';
 import '../../transactions/models/transaction_model.dart';
 
 /// Recent transactions preview widget.
-class RecentTransactionsPreview extends StatelessWidget {
+class RecentTransactionsPreview extends ConsumerWidget {
   /// Creates the widget.
   const RecentTransactionsPreview({super.key, required this.transactions});
 
@@ -23,7 +25,7 @@ class RecentTransactionsPreview extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final preview = transactions.take(3).toList();
 
     return Column(
@@ -86,7 +88,7 @@ class RecentTransactionsPreview extends StatelessWidget {
   }
 }
 
-class _CompactTransactionTile extends StatelessWidget {
+class _CompactTransactionTile extends ConsumerWidget {
   const _CompactTransactionTile({
     required this.transaction,
     required this.isCredit,
@@ -108,9 +110,13 @@ class _CompactTransactionTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsProvider);
     final sign = isCredit ? '+' : '-';
     final amountColor = isCredit ? AppColors.successGreen : AppColors.dangerRed;
+    final amountText = settings.amountMasking
+        ? '$sign MWK ******'
+        : '$sign${CurrencyFormatter.formatTransaction(transaction.amount)}';
 
     return Container(
       decoration: BoxDecoration(
@@ -173,7 +179,7 @@ class _CompactTransactionTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '$sign${CurrencyFormatter.formatTransaction(transaction.amount)}',
+                  amountText,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: amountColor,
                     fontWeight: FontWeight.w600,

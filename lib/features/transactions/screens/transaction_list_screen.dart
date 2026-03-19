@@ -7,6 +7,8 @@ import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
 import '../../../shared/widgets/rbm_tab_scaffold.dart';
+import '../../profile/models/app_settings_model.dart';
+import '../../profile/providers/app_settings_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../widgets/transaction_filter_bar.dart';
 import '../widgets/transaction_list_item.dart';
@@ -19,6 +21,7 @@ class TransactionListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tx = ref.watch(transactionsProvider);
+    final settings = ref.watch(appSettingsProvider);
 
     return OfflineBanner(
       child: RbmTabScaffold(
@@ -34,24 +37,35 @@ class TransactionListScreen extends ConsumerWidget {
           ],
         ),
         body: tx.when(
-          data: (items) => ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: items.length + 1,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: TransactionFilterBar(transactionCount: items.length),
+          data: (items) {
+            final list = ListView.separated(
+              padding: const EdgeInsets.all(16),
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: items.length + 1,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TransactionFilterBar(transactionCount: items.length),
+                  );
+                }
+                final item = items[index - 1];
+                return TransactionListItem(
+                  transaction: item,
+                  onTap: () => context.go('/transactions/${item.id}'),
                 );
-              }
-              final item = items[index - 1];
-              return TransactionListItem(
-                transaction: item,
-                onTap: () => context.go('/transactions/${item.id}'),
+              },
+            );
+
+            if (settings.refreshBehavior == RefreshBehavior.manual) {
+              return RefreshIndicator(
+                onRefresh: () async => ref.refresh(transactionsProvider.future),
+                child: list,
               );
-            },
-          ),
+            }
+            return list;
+          },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => AppErrorWidget(
             message: 'Failed to load transactions: $e',

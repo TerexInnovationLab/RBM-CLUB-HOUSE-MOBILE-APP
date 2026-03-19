@@ -10,6 +10,7 @@ import '../../../shared/widgets/rbm_app_bar.dart';
 import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/staff_profile_model.dart';
+import '../providers/app_settings_provider.dart';
 import '../providers/profile_provider.dart';
 
 /// Profile screen.
@@ -118,8 +119,14 @@ class ProfileScreen extends ConsumerWidget {
                     title: 'Biometric Login',
                     subtitle: 'Fingerprint / Face ID',
                     value: auth.biometricEnabled,
-                    onChanged: (v) =>
-                        ref.read(authProvider.notifier).setBiometricEnabled(v),
+                    onChanged: (v) async {
+                      await ref
+                          .read(authProvider.notifier)
+                          .setBiometricEnabled(v);
+                      await ref
+                          .read(appSettingsProvider.notifier)
+                          .setBiometricPermission(v);
+                    },
                   ),
                   _ActionRow(
                     icon: Icons.help_outline_rounded,

@@ -126,8 +126,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.receipt,
-        builder: (context, state) =>
-            ReceiptScreen(receiptId: state.pathParameters['id'] ?? ''),
+        builder: (context, state) => ReceiptScreen(
+          receiptId: state.pathParameters['id'] ?? '',
+          actionMode: state.uri.queryParameters['mode'],
+        ),
       ),
       GoRoute(
         path: RouteNames.card,

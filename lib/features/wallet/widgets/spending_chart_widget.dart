@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/rbm_card.dart';
+import '../../profile/providers/app_settings_provider.dart';
 
 /// Simple weekly spending chart widget (UI-only).
-class SpendingChartWidget extends StatelessWidget {
+class SpendingChartWidget extends ConsumerWidget {
   /// Creates a spending chart.
-  const SpendingChartWidget({super.key, required this.spent, required this.remaining});
+  const SpendingChartWidget({
+    super.key,
+    required this.spent,
+    required this.remaining,
+  });
 
   /// Amount spent.
   final double spent;
@@ -15,7 +21,8 @@ class SpendingChartWidget extends StatelessWidget {
   final double remaining;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final maskAmounts = ref.watch(appSettingsProvider).amountMasking;
     final month = DateTime.now();
     final label = '${_monthName(month.month)} ${month.year}';
 
@@ -23,13 +30,17 @@ class SpendingChartWidget extends StatelessWidget {
     // deterministically so the UI matches the design reference.
     final weights = const [0.28, 0.24, 0.32, 0.16];
     final weeks = weights.map((w) => spent * w).toList(growable: false);
-    final maxV = (weeks.isEmpty ? 1.0 : weeks.reduce((a, b) => a > b ? a : b)).clamp(1.0, double.infinity);
+    final maxV = (weeks.isEmpty ? 1.0 : weeks.reduce((a, b) => a > b ? a : b))
+        .clamp(1.0, double.infinity);
 
     return RbmCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Weekly spending — $label', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Weekly spending — $label',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -50,6 +61,7 @@ class SpendingChartWidget extends StatelessWidget {
                         value: weeks[i],
                         maxValue: maxV,
                         highlight: i == weeks.length - 1,
+                        maskAmounts: maskAmounts,
                       ),
                     ),
                     if (i != weeks.length - 1) const SizedBox(width: 8),
@@ -64,19 +76,19 @@ class SpendingChartWidget extends StatelessWidget {
   }
 
   String _monthName(int month) => const [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ][(month - 1).clamp(0, 11)];
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ][(month - 1).clamp(0, 11)];
 }
 
 class _WeekBar extends StatelessWidget {
@@ -85,18 +97,24 @@ class _WeekBar extends StatelessWidget {
     required this.value,
     required this.maxValue,
     required this.highlight,
+    required this.maskAmounts,
   });
 
   final String label;
   final double value;
   final double maxValue;
   final bool highlight;
+  final bool maskAmounts;
 
   @override
   Widget build(BuildContext context) {
     final ratio = (value / maxValue).clamp(0.0, 1.0);
-    final barColor = highlight ? AppColors.warningOrange : AppColors.primaryBlue.withValues(alpha: 0.8);
-    final textColor = highlight ? AppColors.warningOrange : AppColors.primaryBlue;
+    final barColor = highlight
+        ? AppColors.warningOrange
+        : AppColors.primaryBlue.withValues(alpha: 0.8);
+    final textColor = highlight
+        ? AppColors.warningOrange
+        : AppColors.primaryBlue;
 
     String compact() {
       if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
@@ -107,12 +125,12 @@ class _WeekBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(
-          compact(),
+          maskAmounts ? '***' : compact(),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: textColor,
-                fontSize: 8,
-                fontWeight: FontWeight.w500,
-              ),
+            color: textColor,
+            fontSize: 8,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(height: 3),
         Expanded(
@@ -136,10 +154,10 @@ class _WeekBar extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: highlight ? AppColors.warningOrange : AppColors.inactive,
-                fontSize: 8,
-                fontWeight: FontWeight.w500,
-              ),
+            color: highlight ? AppColors.warningOrange : AppColors.inactive,
+            fontSize: 8,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/rbm_card.dart';
+import '../../profile/providers/app_settings_provider.dart';
 import '../models/receipt_model.dart';
 
 /// Receipt details widget.
-class ReceiptDetailWidget extends StatelessWidget {
+class ReceiptDetailWidget extends ConsumerWidget {
   /// Creates receipt details widget.
   const ReceiptDetailWidget({super.key, required this.receipt});
 
@@ -15,7 +17,20 @@ class ReceiptDetailWidget extends StatelessWidget {
   final ReceiptModel receipt;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsProvider);
+    final maskAmounts = settings.amountMasking;
+
+    String money(double value) {
+      return maskAmounts ? 'MWK ******' : CurrencyFormatter.format(value);
+    }
+
+    String lineTotal(double value) {
+      return maskAmounts
+          ? '******'
+          : CurrencyFormatter.format(value).replaceFirst('MWK ', '');
+    }
+
     return RbmCard(
       padding: EdgeInsets.zero,
       child: Column(
@@ -39,19 +54,29 @@ class ReceiptDetailWidget extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   receipt.posLocation,
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   receipt.receiptNumber,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 10),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 10,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   Formatters.formatLocalDateTime(receipt.occurredAt),
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 10,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -66,10 +91,18 @@ class ReceiptDetailWidget extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Transaction ref', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.inactive)),
+                Text(
+                  'Transaction ref',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.inactive),
+                ),
                 Text(
                   receipt.salesTransactionId,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -87,7 +120,8 @@ class ReceiptDetailWidget extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Item'.toUpperCase(),
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.borderGray),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(color: AppColors.borderGray),
                       ),
                     ),
                     SizedBox(
@@ -95,7 +129,8 @@ class ReceiptDetailWidget extends StatelessWidget {
                       child: Text(
                         'Qty'.toUpperCase(),
                         textAlign: TextAlign.right,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.borderGray),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(color: AppColors.borderGray),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -104,7 +139,8 @@ class ReceiptDetailWidget extends StatelessWidget {
                       child: Text(
                         'Total'.toUpperCase(),
                         textAlign: TextAlign.right,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.borderGray),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(color: AppColors.borderGray),
                       ),
                     ),
                   ],
@@ -116,7 +152,8 @@ class ReceiptDetailWidget extends StatelessWidget {
                       Expanded(
                         child: Text(
                           item.itemName,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -125,18 +162,20 @@ class ReceiptDetailWidget extends StatelessWidget {
                       SizedBox(
                         width: 40,
                         child: Text(
-                          '×${item.quantity}',
+                          'x${item.quantity}',
                           textAlign: TextAlign.right,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ),
                       const SizedBox(width: 8),
                       SizedBox(
                         width: 64,
                         child: Text(
-                          CurrencyFormatter.format(item.lineTotal).replaceFirst('MWK ', ''),
+                          lineTotal(item.lineTotal),
                           textAlign: TextAlign.right,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ),
                     ],
@@ -154,10 +193,15 @@ class ReceiptDetailWidget extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
             child: Column(
               children: [
-                _row(context, 'Total charged', CurrencyFormatter.format(receipt.totalAmount), emphasize: true),
+                _row(
+                  context,
+                  'Total charged',
+                  money(receipt.totalAmount),
+                  emphasize: true,
+                ),
                 const SizedBox(height: 8),
-                _row(context, 'Balance before', CurrencyFormatter.format(receipt.balanceBefore)),
-                _row(context, 'Balance after', CurrencyFormatter.format(receipt.balanceAfter)),
+                _row(context, 'Balance before', money(receipt.balanceBefore)),
+                _row(context, 'Balance after', money(receipt.balanceAfter)),
               ],
             ),
           ),
@@ -166,12 +210,19 @@ class ReceiptDetailWidget extends StatelessWidget {
     );
   }
 
-  Widget _row(BuildContext context, String label, String value, {bool emphasize = false}) {
-    final labelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.inactive);
+  Widget _row(
+    BuildContext context,
+    String label,
+    String value, {
+    bool emphasize = false,
+  }) {
+    final labelStyle = Theme.of(
+      context,
+    ).textTheme.bodyMedium?.copyWith(color: AppColors.inactive);
     final valueStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: emphasize ? AppColors.primaryBlue : AppColors.textSecondary,
-          fontWeight: emphasize ? FontWeight.w700 : FontWeight.w600,
-        );
+      color: emphasize ? AppColors.primaryBlue : AppColors.textSecondary,
+      fontWeight: emphasize ? FontWeight.w700 : FontWeight.w600,
+    );
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(
@@ -212,11 +263,16 @@ class _DashedDividerPainter extends CustomPainter {
     const dashSpace = 3.0;
     var x = 0.0;
     while (x < size.width) {
-      canvas.drawLine(Offset(x, 0), Offset((x + dashWidth).clamp(0, size.width), 0), paint);
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset((x + dashWidth).clamp(0, size.width), 0),
+        paint,
+      );
       x += dashWidth + dashSpace;
     }
   }
 
   @override
-  bool shouldRepaint(_DashedDividerPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(_DashedDividerPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

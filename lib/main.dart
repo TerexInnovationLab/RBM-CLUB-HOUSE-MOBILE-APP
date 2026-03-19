@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
+import 'features/profile/models/app_settings_model.dart';
+import 'features/profile/providers/app_settings_provider.dart';
 import 'firebase_options.dart';
 import 'routes/app_router.dart';
 
@@ -33,14 +35,30 @@ class RbmClubStaffApp extends ConsumerWidget {
     // Use ref.read to get the service and call init without blocking the build.
     Future.microtask(() => ref.read(notificationServiceProvider).init());
 
+    final settings = ref.watch(appSettingsProvider);
     final router = ref.watch(goRouterProvider);
+
+    final themeMode = switch (settings.themePreference) {
+      AppThemePreference.system => ThemeMode.system,
+      AppThemePreference.light => ThemeMode.light,
+      AppThemePreference.dark => ThemeMode.dark,
+    };
 
     return MaterialApp.router(
       title: 'RBM Club House Staff App',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.light,
+      theme: AppTheme.light(compact: settings.compactMode),
+      darkTheme: AppTheme.dark(compact: settings.compactMode),
+      themeMode: themeMode,
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            textScaler: TextScaler.linear(settings.textScale),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       routerConfig: router,
     );
   }

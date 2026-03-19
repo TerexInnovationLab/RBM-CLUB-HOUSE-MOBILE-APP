@@ -7,7 +7,7 @@ import '../constants/app_dimensions.dart';
 /// Application Material 3 themes.
 abstract final class AppTheme {
   /// Light theme.
-  static ThemeData light() {
+  static ThemeData light({bool compact = false}) {
     const scheme = ColorScheme.light(
       primary: AppColors.primaryBlue,
       secondary: AppColors.secondaryBlue,
@@ -19,11 +19,24 @@ abstract final class AppTheme {
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.backgroundLight,
+      visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
       textTheme: GoogleFonts.robotoTextTheme(base.textTheme).copyWith(
-        displaySmall: GoogleFonts.roboto(fontSize: 32, fontWeight: FontWeight.w700),
-        titleLarge: GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.w500),
-        titleMedium: GoogleFonts.roboto(fontSize: 14, fontWeight: FontWeight.w500),
-        bodyMedium: GoogleFonts.roboto(fontSize: 13, fontWeight: FontWeight.w400),
+        displaySmall: GoogleFonts.roboto(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+        ),
+        titleLarge: GoogleFonts.roboto(
+          fontSize: 18,
+          fontWeight: FontWeight.w500,
+        ),
+        titleMedium: GoogleFonts.roboto(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        bodyMedium: GoogleFonts.roboto(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+        ),
         labelMedium: GoogleFonts.roboto(
           fontSize: 11,
           fontWeight: FontWeight.w500,
@@ -36,7 +49,10 @@ abstract final class AppTheme {
         centerTitle: false,
         elevation: 0,
       ),
-      dividerTheme: const DividerThemeData(color: AppColors.borderGray, thickness: 1),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.borderGray,
+        thickness: 1,
+      ),
       cardTheme: CardThemeData(
         color: AppColors.surfaceLight,
         elevation: 0,
@@ -59,7 +75,10 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.inputRadius),
-          borderSide: const BorderSide(color: AppColors.secondaryBlue, width: 1.2),
+          borderSide: const BorderSide(
+            color: AppColors.secondaryBlue,
+            width: 1.2,
+          ),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -79,14 +98,18 @@ abstract final class AppTheme {
         indicatorColor: AppColors.primaryBlue.withAlpha(31),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
-            color: states.contains(WidgetState.selected) ? AppColors.primaryBlue : AppColors.inactive,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primaryBlue
+                : AppColors.inactive,
             fontWeight: FontWeight.w500,
             fontSize: 12,
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
-            color: states.contains(WidgetState.selected) ? AppColors.primaryBlue : AppColors.inactive,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primaryBlue
+                : AppColors.inactive,
           ),
         ),
       ),
@@ -94,7 +117,7 @@ abstract final class AppTheme {
   }
 
   /// Dark theme.
-  static ThemeData dark() {
+  static ThemeData dark({bool compact = false}) {
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
@@ -105,6 +128,7 @@ abstract final class AppTheme {
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.darkSurface,
+      visualDensity: compact ? VisualDensity.compact : VisualDensity.standard,
       textTheme: GoogleFonts.robotoTextTheme(base.textTheme),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.darkSurface,

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
+import '../../profile/providers/app_settings_provider.dart';
 import '../../../shared/widgets/rbm_card.dart';
 import '../../../shared/widgets/rbm_pill.dart';
 import '../models/transaction_model.dart';
 
 /// Transaction list item tile.
-class TransactionListItem extends StatelessWidget {
+class TransactionListItem extends ConsumerWidget {
   /// Creates a transaction list item.
   const TransactionListItem({super.key, required this.transaction, this.onTap});
 
@@ -20,7 +22,9 @@ class TransactionListItem extends StatelessWidget {
 
   bool _isCredit(TransactionModel t) {
     final type = t.transactionType.toUpperCase();
-    return type.contains('ALLOCATION') || type.contains('CREDIT') || type.contains('TOPUP');
+    return type.contains('ALLOCATION') ||
+        type.contains('CREDIT') ||
+        type.contains('TOPUP');
   }
 
   String _badgeLabel(TransactionModel t) {
@@ -46,10 +50,14 @@ class TransactionListItem extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsProvider);
     final isCredit = _isCredit(transaction);
     final amountColor = isCredit ? AppColors.successGreen : AppColors.dangerRed;
     final sign = isCredit ? '+' : '-';
+    final amountText = settings.amountMasking
+        ? '$sign MWK ******'
+        : '$sign ${CurrencyFormatter.formatTransaction(transaction.amount)}';
 
     return RbmCard(
       onTap: onTap,
@@ -76,14 +84,18 @@ class TransactionListItem extends StatelessWidget {
               children: [
                 Text(
                   transaction.merchant,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textPrimary),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   Formatters.formatDateTimeDot(transaction.occurredAt),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -93,11 +105,16 @@ class TransactionListItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '$sign ${CurrencyFormatter.formatTransaction(transaction.amount)}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: amountColor),
+                amountText,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: amountColor),
               ),
               const SizedBox(height: 6),
-              RbmPill(label: _badgeLabel(transaction), tone: _badgeTone(transaction)),
+              RbmPill(
+                label: _badgeLabel(transaction),
+                tone: _badgeTone(transaction),
+              ),
             ],
           ),
         ],

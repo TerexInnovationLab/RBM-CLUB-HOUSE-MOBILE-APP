@@ -10,6 +10,8 @@ import '../../../shared/widgets/rbm_app_bar.dart';
 import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../dashboard/providers/dashboard_provider.dart';
+import '../../profile/models/app_settings_model.dart';
+import '../../profile/providers/app_settings_provider.dart';
 import '../providers/card_provider.dart';
 import '../widgets/card_actions_row.dart';
 import '../widgets/club_card_widget.dart';
@@ -24,9 +26,17 @@ class VirtualCardScreen extends ConsumerStatefulWidget {
 }
 
 class _VirtualCardScreenState extends ConsumerState<VirtualCardScreen> {
+  ProviderSubscription<AppSettingsModel>? _settingsSubscription;
+  bool _keepScreenSecure = false;
+
   @override
   void initState() {
     super.initState();
+    _keepScreenSecure = ref.read(appSettingsProvider).screenshotProtection;
+    _settingsSubscription = ref.listenManual<AppSettingsModel>(
+      appSettingsProvider,
+      (_, next) => _keepScreenSecure = next.screenshotProtection,
+    );
     _secureScreen();
   }
 
@@ -41,8 +51,13 @@ class _VirtualCardScreenState extends ConsumerState<VirtualCardScreen> {
 
   @override
   void dispose() {
+    _settingsSubscription?.close();
+    _settingsSubscription = null;
+
     try {
-      FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
+      if (!_keepScreenSecure) {
+        FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
+      }
     } catch (_) {}
     try {
       WakelockPlus.disable();

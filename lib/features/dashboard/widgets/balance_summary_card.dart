@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
+import '../../profile/providers/app_settings_provider.dart';
 import 'monthly_progress_bar.dart';
 
 /// Balance summary card.
-class BalanceSummaryCard extends StatefulWidget {
+class BalanceSummaryCard extends ConsumerStatefulWidget {
   /// Creates a balance summary card.
   const BalanceSummaryCard({
     super.key,
@@ -24,26 +26,37 @@ class BalanceSummaryCard extends StatefulWidget {
   final DateTime nextReset;
 
   @override
-  State<BalanceSummaryCard> createState() => _BalanceSummaryCardState();
+  ConsumerState<BalanceSummaryCard> createState() => _BalanceSummaryCardState();
 }
 
-class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
-  // Balance is hidden by default when the app opens.
+class _BalanceSummaryCardState extends ConsumerState<BalanceSummaryCard> {
   bool _isBalanceVisible = false;
+  bool _initializedFromSettings = false;
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(appSettingsProvider);
+    if (!_initializedFromSettings) {
+      _isBalanceVisible =
+          !settings.hideBalancesByDefault && !settings.amountMasking;
+      _initializedFromSettings = true;
+    }
+
     final hasRemaining = widget.remainingAmount >= 0;
     final remainingPrefix = hasRemaining ? '+' : '-';
-    final mainBalance = _isBalanceVisible
-        ? CurrencyFormatter.format(widget.currentBalance)
-        : 'MWK ******';
-    final remainingValue = _isBalanceVisible
-        ? '$remainingPrefix${CurrencyFormatter.formatTransaction(widget.remainingAmount.abs())}'
-        : 'MWK ******';
-    final spentValue = _isBalanceVisible
-        ? CurrencyFormatter.formatTransaction(widget.spentAmount)
-        : 'MWK ******';
+    final shouldMask = !_isBalanceVisible;
+    final allocationValue = shouldMask
+        ? 'MWK ******'
+        : CurrencyFormatter.formatTransaction(widget.monthlyAllocation);
+    final mainBalance = shouldMask
+        ? 'MWK ******'
+        : CurrencyFormatter.format(widget.currentBalance);
+    final remainingValue = shouldMask
+        ? 'MWK ******'
+        : '$remainingPrefix${CurrencyFormatter.formatTransaction(widget.remainingAmount.abs())}';
+    final spentValue = shouldMask
+        ? 'MWK ******'
+        : CurrencyFormatter.formatTransaction(widget.spentAmount);
 
     return Container(
       width: double.infinity,
@@ -60,7 +73,7 @@ class _BalanceSummaryCardState extends State<BalanceSummaryCard> {
             children: [
               Expanded(
                 child: Text(
-                  'Monthly Allocation ${CurrencyFormatter.formatTransaction(widget.monthlyAllocation)}',
+                  'Monthly Allocation $allocationValue',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(

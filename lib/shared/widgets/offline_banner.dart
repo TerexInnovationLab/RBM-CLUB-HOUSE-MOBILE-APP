@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+import '../../features/profile/providers/app_settings_provider.dart';
 
 /// Displays an offline banner when network connectivity is lost.
-class OfflineBanner extends StatefulWidget {
+class OfflineBanner extends ConsumerStatefulWidget {
   /// Creates an offline banner.
   const OfflineBanner({super.key, required this.child});
 
@@ -15,10 +17,10 @@ class OfflineBanner extends StatefulWidget {
   final Widget child;
 
   @override
-  State<OfflineBanner> createState() => _OfflineBannerState();
+  ConsumerState<OfflineBanner> createState() => _OfflineBannerState();
 }
 
-class _OfflineBannerState extends State<OfflineBanner> {
+class _OfflineBannerState extends ConsumerState<OfflineBanner> {
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _offline = false;
 
@@ -26,7 +28,8 @@ class _OfflineBannerState extends State<OfflineBanner> {
   void initState() {
     super.initState();
     _sub = Connectivity().onConnectivityChanged.listen((results) {
-      final isOffline = results.isEmpty || results.every((r) => r == ConnectivityResult.none);
+      final isOffline =
+          results.isEmpty || results.every((r) => r == ConnectivityResult.none);
       if (mounted) setState(() => _offline = isOffline);
     });
   }
@@ -40,6 +43,11 @@ class _OfflineBannerState extends State<OfflineBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final offlineControlsEnabled = ref
+        .watch(appSettingsProvider)
+        .offlineDataControls;
+    if (!offlineControlsEnabled) return widget.child;
+
     return Stack(
       children: [
         widget.child,
@@ -53,7 +61,10 @@ class _OfflineBannerState extends State<OfflineBanner> {
                 child: SizedBox(
                   width: double.infinity,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     child: Text(
                       AppStrings.noInternet,
                       style: const TextStyle(color: Colors.white),
@@ -68,4 +79,3 @@ class _OfflineBannerState extends State<OfflineBanner> {
     );
   }
 }
-

@@ -8,6 +8,8 @@ import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../profile/models/app_settings_model.dart';
+import '../../profile/providers/app_settings_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/balance_summary_card.dart';
 import '../widgets/quick_actions_row.dart';
@@ -22,6 +24,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final summary = ref.watch(dashboardProvider);
+    final settings = ref.watch(appSettingsProvider);
 
     return OfflineBanner(
       child: RbmTabScaffold(
@@ -32,9 +35,8 @@ class HomeScreen extends ConsumerWidget {
           onProfileTap: () => context.go(RouteNames.profile),
         ),
         body: summary.when(
-          data: (data) => RefreshIndicator(
-            onRefresh: () async => ref.refresh(dashboardProvider.future),
-            child: Container(
+          data: (data) {
+            final body = Container(
               color: AppColors.backgroundLight,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -82,8 +84,16 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                 ],
               ),
-            ),
-          ),
+            );
+
+            if (settings.refreshBehavior == RefreshBehavior.manual) {
+              return RefreshIndicator(
+                onRefresh: () async => ref.refresh(dashboardProvider.future),
+                child: body,
+              );
+            }
+            return body;
+          },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => AppErrorWidget(
             message: 'Failed to load dashboard: $e',
