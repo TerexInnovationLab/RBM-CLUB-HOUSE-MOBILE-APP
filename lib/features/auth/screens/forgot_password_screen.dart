@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../routes/route_names.dart';
@@ -117,52 +118,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 icon: const Icon(Icons.arrow_back_rounded),
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 12),
                             Align(
-                              child: Container(
-                                width: 74,
-                                height: 74,
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [Color(0xFFE6ECFA), Colors.white],
-                                  ),
-                                  border: Border.all(
-                                    color: const Color(0xFFE2E8F4),
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.asset(
-                                    'assets/images/rbm_emblem.jpeg',
-                                    fit: BoxFit.cover,
-                                  ),
+                              child: SizedBox(
+                                width: 170,
+                                height: 150,
+                                child: Lottie.asset(
+                                  'assets/animations/forgot_password.json',
+                                  fit: BoxFit.contain,
+                                  repeat: true,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Align(
-                              child: Container(
-                                width: 88,
-                                height: 88,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: const Color(0xFFFFECF5),
-                                  border: Border.all(
-                                    color: const Color(0xFFF8D4E8),
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.lock_reset_rounded,
-                                  color: Color(0xFFCF0F72),
-                                  size: 38,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 8),
                             Text(
                               'Forgot Password?',
                               textAlign: TextAlign.center,
