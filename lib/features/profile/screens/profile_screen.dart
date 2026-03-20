@@ -149,8 +149,10 @@ class ProfileScreen extends ConsumerWidget {
                       final ok = await showDialog<bool>(
                         context: context,
                         builder: (_) => const ConfirmationDialog(
-                          title: 'Logout',
+                          title: 'Log Out',
                           message: 'Are you sure you want to log out?',
+                          confirmLabel: 'Log Out',
+                          isDestructive: true,
                         ),
                       );
                       if (ok == true) {
