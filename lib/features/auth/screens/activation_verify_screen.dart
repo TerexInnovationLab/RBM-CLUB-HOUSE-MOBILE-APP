@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../../core/config/app_config.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/validators.dart';
@@ -12,38 +12,88 @@ import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/top_snackbar.dart';
 import '../providers/auth_provider.dart';
-import 'activation_verify_screen.dart';
+import 'set_pin_screen.dart';
 
-/// First-time account activation screen.
-class ActivationScreen extends ConsumerStatefulWidget {
-  /// Creates an activation screen.
-  const ActivationScreen({super.key});
+/// Route args for activation identity verification.
+class ActivationVerifyArgs {
+  /// Creates activation verification args.
+  const ActivationVerifyArgs({
+    required this.employeeNumber,
+    required this.fullName,
+    required this.phoneMasked,
+    required this.expectedPhoneLast3,
+  });
 
-  @override
-  ConsumerState<ActivationScreen> createState() => _ActivationScreenState();
+  /// Employee number.
+  final String employeeNumber;
+
+  /// Employee full name.
+  final String fullName;
+
+  /// Masked phone number.
+  final String phoneMasked;
+
+  /// Expected last 3 digits used for verification.
+  final String expectedPhoneLast3;
 }
 
-class _ActivationScreenState extends ConsumerState<ActivationScreen> {
+/// Activation identity verification screen.
+class ActivationVerifyScreen extends ConsumerStatefulWidget {
+  /// Creates activation verification screen.
+  const ActivationVerifyScreen({super.key, required this.args});
+
+  /// Arguments from activation step 1.
+  final ActivationVerifyArgs args;
+
+  @override
+  ConsumerState<ActivationVerifyScreen> createState() =>
+      _ActivationVerifyScreenState();
+}
+
+class _ActivationVerifyScreenState
+    extends ConsumerState<ActivationVerifyScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _employeeController = TextEditingController();
+  final _phoneDigitsController = TextEditingController();
 
   bool _loading = false;
 
   @override
   void dispose() {
-    _employeeController.dispose();
+    _phoneDigitsController.dispose();
     super.dispose();
   }
 
-  Future<void> _continue() async {
+  Future<void> _verifyAndContinue() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_loading) return;
+
+    final entered = _phoneDigitsController.text.trim();
+    if (entered != widget.args.expectedPhoneLast3) {
+      TopSnackBar.show(
+        context,
+        message: 'The digits entered do not match our records.',
+        tone: TopSnackBarTone.error,
+      );
+      return;
+    }
+
     setState(() => _loading = true);
     try {
-      final employeeNumber = _employeeController.text.trim();
-      final args = _resolveActivationVerifyArgs(employeeNumber);
+      await ref
+          .read(authProvider.notifier)
+          .activateStep1(
+            employeeNumber: widget.args.employeeNumber,
+            temporaryPin: entered,
+          );
 
       if (!mounted) return;
-      context.push(RouteNames.activationVerify, extra: args);
+      context.push(
+        RouteNames.setPin,
+        extra: SetPinArgs(
+          employeeNumber: widget.args.employeeNumber,
+          activationCode: entered,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       TopSnackBar.show(
@@ -58,15 +108,13 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authProvider);
+    final args = widget.args;
     final theme = Theme.of(context);
 
     return OfflineBanner(
       child: Scaffold(
-        body: auth.isLocked
-            ? const AppErrorWidget(
-                message: 'Account locked - contact HR to unlock.',
-              )
+        body: args.employeeNumber.trim().isEmpty
+            ? const AppErrorWidget(message: 'Activation details are missing.')
             : Stack(
                 children: [
                   Positioned.fill(
@@ -93,18 +141,6 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: const Color(0xFFDEE7FF).withValues(alpha: 0.48),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: -120,
-                    left: -80,
-                    child: Container(
-                      width: 250,
-                      height: 250,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFCCD9F7).withValues(alpha: 0.44),
                       ),
                     ),
                   ),
@@ -143,7 +179,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                                         if (context.canPop()) {
                                           context.pop();
                                         } else {
-                                          context.go(RouteNames.login);
+                                          context.go(RouteNames.activation);
                                         }
                                       },
                                       style: IconButton.styleFrom(
@@ -159,19 +195,19 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                                   const SizedBox(height: 12),
                                   Align(
                                     child: SizedBox(
-                                      width: 170,
+                                      width: 185,
                                       height: 150,
                                       child: Lottie.asset(
-                                        'assets/animations/forgot_password.json',
+                                        'assets/animations/email.json',
                                         fit: BoxFit.contain,
                                         repeat: true,
                                         frameRate: FrameRate.max,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 10),
                                   Text(
-                                    'Activate Account',
+                                    'Verify Your Identity',
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.displaySmall
                                         ?.copyWith(
@@ -183,35 +219,76 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Enter your employee number to start account activation.',
+                                    'Enter the last 3 digits for\n${args.phoneMasked}.',
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       color: AppColors.textSecondary,
                                       fontSize: 15,
+                                      height: 1.4,
                                     ),
                                   ),
-                                  const SizedBox(height: 22),
-                                  TextFormField(
-                                    controller: _employeeController,
-                                    decoration: _fieldDecoration(
-                                      label: AppStrings.employeeNumberLabel,
-                                      hint: 'EMP-00123',
-                                    ),
-                                    autocorrect: false,
-                                    enableSuggestions: false,
-                                    textInputAction: TextInputAction.done,
-                                    validator: Validators.employeeNumber,
-                                    onFieldSubmitted: (_) => _continue(),
-                                  ),
-                                  if (AppConfig.isDemo) ...[
-                                    const SizedBox(height: 14),
-                                    const _DemoCredentialsCard(),
-                                  ],
                                   const SizedBox(height: 18),
+                                  Container(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      12,
+                                      12,
+                                      12,
+                                      10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEAF2FF),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(0xFFCADEFF),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Confirm your details',
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text('Name: ${args.fullName}'),
+                                        Text(
+                                          'Employee Number: ${args.employeeNumber}',
+                                        ),
+                                        Text(
+                                          'Registered Phone: ${args.phoneMasked}',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  TextFormField(
+                                    controller: _phoneDigitsController,
+                                    decoration: _fieldDecoration(
+                                      label: 'Last 3 digits',
+                                      hint: 'e.g. 321',
+                                    ).copyWith(counterText: ''),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(3),
+                                    ],
+                                    textInputAction: TextInputAction.done,
+                                    validator: Validators.phoneLast3,
+                                    onFieldSubmitted: (_) =>
+                                        _verifyAndContinue(),
+                                  ),
+                                  const SizedBox(height: 20),
                                   SizedBox(
                                     height: 52,
                                     child: FilledButton(
-                                      onPressed: _loading ? null : _continue,
+                                      onPressed: _loading
+                                          ? null
+                                          : _verifyAndContinue,
                                       style: FilledButton.styleFrom(
                                         backgroundColor: const Color(
                                           0xFF111827,
@@ -235,14 +312,6 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                                           : const Text(
                                               AppStrings.continueLabel,
                                             ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  TextButton(
-                                    onPressed: () =>
-                                        context.go(RouteNames.login),
-                                    child: const Text(
-                                      'Already activated? Log in',
                                     ),
                                   ),
                                 ],
@@ -280,104 +349,6 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.4),
-      ),
-    );
-  }
-
-  ActivationVerifyArgs _resolveActivationVerifyArgs(String employeeNumber) {
-    final normalized = employeeNumber.trim().toUpperCase();
-
-    // Demo directory for activation identity checks.
-    final demoDirectory = <String, ({String fullName, String phoneLast3})>{
-      AppConfig.demoActivationEmployeeNumber.toUpperCase(): (
-        fullName: AppConfig.demoLoginName,
-        phoneLast3: AppConfig.demoActivationPhoneLast3,
-      ),
-      'EMP-00456': (fullName: 'Mary Tembo', phoneLast3: '654'),
-      'EMP-00789': (fullName: 'Peter Mbewe', phoneLast3: '987'),
-    };
-
-    if (AppConfig.isDemo) {
-      final match =
-          demoDirectory[normalized] ??
-          (
-            fullName: AppConfig.demoLoginName,
-            phoneLast3: AppConfig.demoActivationPhoneLast3,
-          );
-      return ActivationVerifyArgs(
-        employeeNumber: employeeNumber,
-        fullName: match.fullName,
-        phoneMasked: '+265 *** *** ${match.phoneLast3}',
-        expectedPhoneLast3: match.phoneLast3,
-      );
-    }
-
-    // Deterministic non-demo fallback while backend identity lookup is pending.
-    final digits = RegExp(r'\d+').firstMatch(normalized)?.group(0) ?? '000';
-    final padded = digits.padLeft(3, '0');
-    final last3 = padded.substring(padded.length - 3);
-    return ActivationVerifyArgs(
-      employeeNumber: employeeNumber,
-      fullName: 'Employee',
-      phoneMasked: '+*** *** *** $last3',
-      expectedPhoneLast3: last3,
-    );
-  }
-}
-
-class _DemoCredentialsCard extends StatelessWidget {
-  const _DemoCredentialsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF2FF),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFCADEFF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Demo Activation Credentials',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: const Color(0xFF003A8F),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Employee Number: ${AppConfig.demoActivationEmployeeNumber}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF333333),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Text(
-            'Name: ${AppConfig.demoLoginName}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF333333),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Text(
-            'Phone Last 3 Digits: ${AppConfig.demoActivationPhoneLast3}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF333333),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Next step will ask for those 3 digits, then you set your own PIN.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: const Color(0xFF666666),
-            ),
-          ),
-        ],
       ),
     );
   }

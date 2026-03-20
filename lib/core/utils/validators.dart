@@ -15,5 +15,12 @@ abstract final class Validators {
     if (!RegExp(r'^[0-9]{6}$').hasMatch(v)) return 'PIN must be numeric.';
     return null;
   }
-}
 
+  /// Validates a 3-digit phone suffix.
+  static String? phoneLast3(String? value) {
+    final v = (value ?? '').trim();
+    if (v.length != 3) return 'Enter the last 3 digits.';
+    if (!RegExp(r'^[0-9]{3}$').hasMatch(v)) return 'Digits only.';
+    return null;
+  }
+}

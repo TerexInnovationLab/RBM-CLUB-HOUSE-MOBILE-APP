@@ -299,7 +299,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             const SizedBox(height: 12),
                             OutlinedButton.icon(
                               onPressed: () =>
-                                  context.go(RouteNames.activation),
+                                  context.push(RouteNames.activation),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,

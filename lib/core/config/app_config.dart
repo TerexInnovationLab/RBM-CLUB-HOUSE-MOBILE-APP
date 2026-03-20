@@ -17,9 +17,9 @@ abstract final class AppConfig {
     'DEMO_ACTIVATION_EMPLOYEE',
     defaultValue: 'EMP-00123',
   );
-  static const String demoActivationTemporaryPin = String.fromEnvironment(
-    'DEMO_ACTIVATION_TEMP_PIN',
-    defaultValue: '654321',
+  static const String demoActivationPhoneLast3 = String.fromEnvironment(
+    'DEMO_ACTIVATION_PHONE_LAST3',
+    defaultValue: '321',
   );
 
   static String _environment() =>

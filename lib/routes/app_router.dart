@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/activation_screen.dart';
+import '../features/auth/screens/activation_verify_screen.dart';
 import '../features/auth/screens/forgot_password_check_screen.dart';
 import '../features/auth/screens/forgot_password_screen.dart';
 import '../features/auth/screens/login_screen.dart';
@@ -71,6 +72,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           loc == RouteNames.login ||
           loc == RouteNames.activation ||
+          loc == RouteNames.activationVerify ||
           loc == RouteNames.forgotPassword ||
           loc == RouteNames.forgotPasswordCheck ||
           loc == RouteNames.setPin;
@@ -95,6 +97,23 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ActivationScreen(),
       ),
       GoRoute(
+        path: RouteNames.activationVerify,
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is ActivationVerifyArgs) {
+            return ActivationVerifyScreen(args: extra);
+          }
+          return const ActivationVerifyScreen(
+            args: ActivationVerifyArgs(
+              employeeNumber: '',
+              fullName: '',
+              phoneMasked: '',
+              expectedPhoneLast3: '',
+            ),
+          );
+        },
+      ),
+      GoRoute(
         path: RouteNames.login,
         builder: (context, state) => const LoginScreen(),
       ),
@@ -114,7 +133,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final extra = state.extra;
           if (extra is SetPinArgs) return SetPinScreen(args: extra);
           return const SetPinScreen(
-            args: SetPinArgs(employeeNumber: '', temporaryPin: ''),
+            args: SetPinArgs(employeeNumber: '', activationCode: ''),
           );
         },
       ),
