@@ -288,13 +288,13 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
     final normalized = employeeNumber.trim().toUpperCase();
 
     // Demo directory for activation identity checks.
-    final demoDirectory = <String, ({String fullName, String phoneLast3})>{
+    final demoDirectory = <String, ({String fullName, String phoneNumber})>{
       AppConfig.demoActivationEmployeeNumber.toUpperCase(): (
         fullName: AppConfig.demoLoginName,
-        phoneLast3: AppConfig.demoActivationPhoneLast3,
+        phoneNumber: AppConfig.demoActivationPhoneNumber,
       ),
-      'EMP-00456': (fullName: 'Mary Tembo', phoneLast3: '654'),
-      'EMP-00789': (fullName: 'Peter Mbewe', phoneLast3: '987'),
+      'EMP-00456': (fullName: 'Mary Tembo', phoneNumber: '+265995551234'),
+      'EMP-00789': (fullName: 'Peter Mbewe', phoneNumber: '+265998880789'),
     };
 
     if (AppConfig.isDemo) {
@@ -302,25 +302,23 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
           demoDirectory[normalized] ??
           (
             fullName: AppConfig.demoLoginName,
-            phoneLast3: AppConfig.demoActivationPhoneLast3,
+            phoneNumber: AppConfig.demoActivationPhoneNumber,
           );
       return ActivationVerifyArgs(
         employeeNumber: employeeNumber,
         fullName: match.fullName,
-        phoneMasked: '+265 *** *** ${match.phoneLast3}',
-        expectedPhoneLast3: match.phoneLast3,
+        registeredPhoneNumber: match.phoneNumber,
       );
     }
 
     // Deterministic non-demo fallback while backend identity lookup is pending.
     final digits = RegExp(r'\d+').firstMatch(normalized)?.group(0) ?? '000';
-    final padded = digits.padLeft(3, '0');
-    final last3 = padded.substring(padded.length - 3);
+    final padded = digits.padLeft(6, '0');
+    final last6 = padded.substring(padded.length - 6);
     return ActivationVerifyArgs(
       employeeNumber: employeeNumber,
       fullName: 'Employee',
-      phoneMasked: '+*** *** *** $last3',
-      expectedPhoneLast3: last3,
+      registeredPhoneNumber: '+26599$last6',
     );
   }
 }
@@ -364,7 +362,7 @@ class _DemoCredentialsCard extends StatelessWidget {
             ),
           ),
           Text(
-            'Phone Last 3 Digits: ${AppConfig.demoActivationPhoneLast3}',
+            'Registered Phone: ${AppConfig.demoActivationPhoneNumber}',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: const Color(0xFF333333),
               fontWeight: FontWeight.w600,
@@ -372,7 +370,7 @@ class _DemoCredentialsCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Next step will ask for those 3 digits, then you set your own PIN.',
+            'Next step asks for the full phone number, then you set your own PIN.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: const Color(0xFF666666),
             ),

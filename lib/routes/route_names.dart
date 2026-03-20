@@ -3,6 +3,7 @@ abstract final class RouteNames {
   static const String splash = '/';
   static const String activation = '/activation';
   static const String activationVerify = '/activation/verify';
+  static const String activationSuccess = '/activation/success';
   static const String login = '/login';
   static const String forgotPassword = '/forgot-password';
   static const String forgotPasswordCheck = '/forgot-password/check';

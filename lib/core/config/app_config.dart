@@ -21,6 +21,10 @@ abstract final class AppConfig {
     'DEMO_ACTIVATION_PHONE_LAST3',
     defaultValue: '321',
   );
+  static const String demoActivationPhoneNumber = String.fromEnvironment(
+    'DEMO_ACTIVATION_PHONE_NUMBER',
+    defaultValue: '+265991234321',
+  );
 
   static String _environment() =>
       const String.fromEnvironment('ENV', defaultValue: 'dev').toLowerCase();

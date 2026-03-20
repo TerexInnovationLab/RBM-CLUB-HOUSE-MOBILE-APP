@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
@@ -20,8 +19,7 @@ class ActivationVerifyArgs {
   const ActivationVerifyArgs({
     required this.employeeNumber,
     required this.fullName,
-    required this.phoneMasked,
-    required this.expectedPhoneLast3,
+    required this.registeredPhoneNumber,
   });
 
   /// Employee number.
@@ -30,11 +28,8 @@ class ActivationVerifyArgs {
   /// Employee full name.
   final String fullName;
 
-  /// Masked phone number.
-  final String phoneMasked;
-
-  /// Expected last 3 digits used for verification.
-  final String expectedPhoneLast3;
+  /// Registered full phone number.
+  final String registeredPhoneNumber;
 }
 
 /// Activation identity verification screen.
@@ -53,13 +48,13 @@ class ActivationVerifyScreen extends ConsumerStatefulWidget {
 class _ActivationVerifyScreenState
     extends ConsumerState<ActivationVerifyScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneDigitsController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   bool _loading = false;
 
   @override
   void dispose() {
-    _phoneDigitsController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -67,15 +62,17 @@ class _ActivationVerifyScreenState
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_loading) return;
 
-    final entered = _phoneDigitsController.text.trim();
-    if (entered != widget.args.expectedPhoneLast3) {
+    final entered = _normalizePhone(_phoneController.text.trim());
+    final expected = _normalizePhone(widget.args.registeredPhoneNumber);
+    if (entered != expected) {
       TopSnackBar.show(
         context,
-        message: 'The digits entered do not match our records.',
+        message: 'The phone number entered does not match our records.',
         tone: TopSnackBarTone.error,
       );
       return;
     }
+    final activationCode = entered.substring(entered.length - 3);
 
     setState(() => _loading = true);
     try {
@@ -83,7 +80,7 @@ class _ActivationVerifyScreenState
           .read(authProvider.notifier)
           .activateStep1(
             employeeNumber: widget.args.employeeNumber,
-            temporaryPin: entered,
+            temporaryPin: activationCode,
           );
 
       if (!mounted) return;
@@ -91,7 +88,7 @@ class _ActivationVerifyScreenState
         RouteNames.setPin,
         extra: SetPinArgs(
           employeeNumber: widget.args.employeeNumber,
-          activationCode: entered,
+          activationCode: activationCode,
         ),
       );
     } catch (e) {
@@ -110,6 +107,7 @@ class _ActivationVerifyScreenState
   Widget build(BuildContext context) {
     final args = widget.args;
     final theme = Theme.of(context);
+    final firstName = _firstName(args.fullName);
 
     return OfflineBanner(
       child: Scaffold(
@@ -207,7 +205,7 @@ class _ActivationVerifyScreenState
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
-                                    'Verify Your Identity',
+                                    'Hello, $firstName.',
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.displaySmall
                                         ?.copyWith(
@@ -219,7 +217,7 @@ class _ActivationVerifyScreenState
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Enter the last 3 digits for\n${args.phoneMasked}.',
+                                    'Verify your identity by entering your full registered phone number.',
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       color: AppColors.textSecondary,
@@ -260,25 +258,21 @@ class _ActivationVerifyScreenState
                                           'Employee Number: ${args.employeeNumber}',
                                         ),
                                         Text(
-                                          'Registered Phone: ${args.phoneMasked}',
+                                          'Registered Phone: ${args.registeredPhoneNumber}',
                                         ),
                                       ],
                                     ),
                                   ),
                                   const SizedBox(height: 14),
                                   TextFormField(
-                                    controller: _phoneDigitsController,
+                                    controller: _phoneController,
                                     decoration: _fieldDecoration(
-                                      label: 'Last 3 digits',
-                                      hint: 'e.g. 321',
-                                    ).copyWith(counterText: ''),
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(3),
-                                    ],
+                                      label: 'Phone number',
+                                      hint: '+265991234321',
+                                    ),
+                                    keyboardType: TextInputType.phone,
                                     textInputAction: TextInputAction.done,
-                                    validator: Validators.phoneLast3,
+                                    validator: Validators.phoneNumber,
                                     onFieldSubmitted: (_) =>
                                         _verifyAndContinue(),
                                   ),
@@ -326,6 +320,15 @@ class _ActivationVerifyScreenState
               ),
       ),
     );
+  }
+
+  String _normalizePhone(String value) =>
+      value.replaceAll(RegExp(r'[^0-9]'), '');
+
+  String _firstName(String fullName) {
+    final trimmed = fullName.trim();
+    if (trimmed.isEmpty) return 'there';
+    return trimmed.split(RegExp(r'\s+')).first;
   }
 
   InputDecoration _fieldDecoration({

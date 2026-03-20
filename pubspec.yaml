@@ -122,6 +122,7 @@ flutter:
     - assets/images/rbm_emblem.jpeg
     - assets/animations/forgot_password.json
     - assets/animations/email.json
+    - assets/animations/success.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

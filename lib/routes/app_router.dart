@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/activation_screen.dart';
+import '../features/auth/screens/activation_success_screen.dart';
 import '../features/auth/screens/activation_verify_screen.dart';
 import '../features/auth/screens/forgot_password_check_screen.dart';
 import '../features/auth/screens/forgot_password_screen.dart';
@@ -81,7 +82,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return isAuthRoute ? null : RouteNames.login;
       }
 
-      if (auth.isAuthenticated && isAuthRoute) {
+      if (auth.isAuthenticated && isAuthRoute && loc != RouteNames.setPin) {
         return RouteNames.home;
       }
 
@@ -107,11 +108,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             args: ActivationVerifyArgs(
               employeeNumber: '',
               fullName: '',
-              phoneMasked: '',
-              expectedPhoneLast3: '',
+              registeredPhoneNumber: '',
             ),
           );
         },
+      ),
+      GoRoute(
+        path: RouteNames.activationSuccess,
+        builder: (context, state) => const ActivationSuccessScreen(),
       ),
       GoRoute(
         path: RouteNames.login,

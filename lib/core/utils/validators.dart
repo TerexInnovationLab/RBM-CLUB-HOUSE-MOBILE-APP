@@ -23,4 +23,15 @@ abstract final class Validators {
     if (!RegExp(r'^[0-9]{3}$').hasMatch(v)) return 'Digits only.';
     return null;
   }
+
+  /// Validates a full phone number (digits can include formatting symbols).
+  static String? phoneNumber(String? value) {
+    final v = (value ?? '').trim();
+    if (v.isEmpty) return 'Phone number is required.';
+    final digits = v.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.length < 10 || digits.length > 15) {
+      return 'Enter a valid phone number.';
+    }
+    return null;
+  }
 }

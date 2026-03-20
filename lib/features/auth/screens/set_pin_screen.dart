@@ -9,7 +9,6 @@ import '../../../core/utils/validators.dart';
 import '../../../routes/route_names.dart';
 import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
-import '../../../shared/widgets/top_snackbar.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/pin_input_widget.dart';
 import '../widgets/pin_keypad_widget.dart';
@@ -108,12 +107,7 @@ class _SetPinScreenState extends ConsumerState<SetPinScreen> {
       if (!mounted) return;
       await _promptBiometricIfSupported();
       if (!mounted) return;
-      context.go(RouteNames.home);
-      TopSnackBar.show(
-        context,
-        message: 'Account activated successfully.',
-        tone: TopSnackBarTone.success,
-      );
+      context.go(RouteNames.activationSuccess);
     } catch (e) {
       setState(() => _error = 'Activation failed: $e');
     } finally {
