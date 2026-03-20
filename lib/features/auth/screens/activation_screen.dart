@@ -116,6 +116,10 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                                 ? 'Temporary PIN is required.'
                                 : null,
                           ),
+                          if (AppConfig.isDemo) ...[
+                            const SizedBox(height: 14),
+                            const _DemoCredentialsCard(),
+                          ],
                           const Spacer(),
                           RbmButton(
                             label: AppStrings.continueLabel,
@@ -124,23 +128,6 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                             icon: Icons.lock_open,
                           ),
                           const SizedBox(height: 8),
-                          if (AppConfig.isDemo) ...[
-                            FilledButton.icon(
-                              onPressed: () async {
-                                await ref
-                                    .read(authProvider.notifier)
-                                    .loginDemo(
-                                      employeeNumber: _employeeController.text
-                                          .trim(),
-                                    );
-                                if (!context.mounted) return;
-                                context.go(RouteNames.home);
-                              },
-                              icon: const Icon(Icons.play_circle_outline),
-                              label: const Text('Use demo account'),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
                           TextButton(
                             onPressed: () => context.go(RouteNames.login),
                             child: const Text('Already activated? Log in'),
@@ -151,6 +138,57 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                   ),
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _DemoCredentialsCard extends StatelessWidget {
+  const _DemoCredentialsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF2FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFCADEFF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Demo Activation Credentials',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: const Color(0xFF003A8F),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Employee Number: ${AppConfig.demoActivationEmployeeNumber}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF333333),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            'Temporary PIN: ${AppConfig.demoActivationTemporaryPin}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF333333),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'After activation, set any 6-digit PIN you want.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF666666),
+            ),
+          ),
+        ],
       ),
     );
   }

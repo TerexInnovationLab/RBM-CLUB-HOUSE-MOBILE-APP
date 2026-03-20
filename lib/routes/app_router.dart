@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/activation_screen.dart';
+import '../features/auth/screens/forgot_password_check_screen.dart';
+import '../features/auth/screens/forgot_password_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/set_pin_screen.dart';
 import '../features/card/screens/fullscreen_qr_screen.dart';
@@ -69,6 +71,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           loc == RouteNames.login ||
           loc == RouteNames.activation ||
+          loc == RouteNames.forgotPassword ||
+          loc == RouteNames.forgotPasswordCheck ||
           loc == RouteNames.setPin;
 
       if (!auth.isAuthenticated) {
@@ -93,6 +97,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.login,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.forgotPasswordCheck,
+        builder: (context, state) => ForgotPasswordCheckScreen(
+          email: state.uri.queryParameters['email'] ?? 'your email',
+        ),
       ),
       GoRoute(
         path: RouteNames.setPin,
