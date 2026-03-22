@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../shared/widgets/rbm_card.dart';
 import '../../profile/providers/app_settings_provider.dart';
 
@@ -33,24 +34,39 @@ class SpendingChartWidget extends ConsumerWidget {
     final maxV = (weeks.isEmpty ? 1.0 : weeks.reduce((a, b) => a > b ? a : b))
         .clamp(1.0, double.infinity);
 
+    String money(double value) {
+      if (maskAmounts) return 'MWK ******';
+      return CurrencyFormatter.format(value).replaceFirst('.00', '');
+    }
+
     return RbmCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Weekly spending — $label',
-            style: Theme.of(context).textTheme.titleMedium,
+            'Spending Trend',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Weekly breakdown for $label',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFF7F9FD),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFEFEFEF)),
+              border: Border.all(color: AppColors.borderGray),
             ),
             child: SizedBox(
-              height: 80,
+              height: 96,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -69,6 +85,26 @@ class SpendingChartWidget extends ConsumerWidget {
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryTile(
+                  label: 'Spent',
+                  value: money(spent),
+                  color: AppColors.warningOrange,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SummaryTile(
+                  label: 'Remaining',
+                  value: money(remaining),
+                  color: AppColors.successGreen,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -111,10 +147,10 @@ class _WeekBar extends StatelessWidget {
     final ratio = (value / maxValue).clamp(0.0, 1.0);
     final barColor = highlight
         ? AppColors.warningOrange
-        : AppColors.primaryBlue.withValues(alpha: 0.8);
+        : AppColors.secondaryBlue.withValues(alpha: 0.86);
     final textColor = highlight
         ? AppColors.warningOrange
-        : AppColors.primaryBlue;
+        : AppColors.secondaryBlue;
 
     String compact() {
       if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
@@ -128,8 +164,8 @@ class _WeekBar extends StatelessWidget {
           maskAmounts ? '***' : compact(),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: textColor,
-            fontSize: 8,
-            fontWeight: FontWeight.w500,
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 3),
@@ -142,8 +178,8 @@ class _WeekBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: barColor,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(4),
-                    topRight: Radius.circular(4),
+                    topLeft: Radius.circular(6),
+                    topRight: Radius.circular(6),
                   ),
                 ),
               ),
@@ -155,11 +191,57 @@ class _WeekBar extends StatelessWidget {
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: highlight ? AppColors.warningOrange : AppColors.inactive,
-            fontSize: 8,
-            fontWeight: FontWeight.w500,
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SummaryTile extends StatelessWidget {
+  const _SummaryTile({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }

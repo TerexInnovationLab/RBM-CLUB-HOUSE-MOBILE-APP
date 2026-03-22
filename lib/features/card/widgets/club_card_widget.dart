@@ -14,6 +14,8 @@ class ClubCardWidget extends StatelessWidget {
     this.staffDepartment,
     this.staffGrade,
     this.availableBalance,
+    this.showQrPanel = true,
+    this.showRbmLogo = false,
   });
 
   /// Virtual card.
@@ -22,11 +24,13 @@ class ClubCardWidget extends StatelessWidget {
   final String? staffDepartment;
   final String? staffGrade;
   final double? availableBalance;
+  final bool showQrPanel;
+  final bool showRbmLogo;
 
   String _maskedToken() {
     final src = card.cardId.isEmpty ? card.qrPayload : card.cardId;
     final last4 = src.length >= 4 ? src.substring(src.length - 4) : src;
-    return 'TKN-••••••••$last4'.toUpperCase();
+    return 'TKN-********$last4'.toUpperCase();
   }
 
   @override
@@ -34,7 +38,7 @@ class ClubCardWidget extends StatelessWidget {
     final deptGrade = [
       if ((staffGrade ?? '').trim().isNotEmpty) staffGrade!.trim(),
       if ((staffDepartment ?? '').trim().isNotEmpty) staffDepartment!.trim(),
-    ].join(' · ');
+    ].join(' - ');
 
     return Column(
       children: [
@@ -82,15 +86,35 @@ class ClubCardWidget extends StatelessWidget {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Center(
-                            child: Text(
-                              'RBM',
-                              style: TextStyle(
-                                color: AppColors.primaryBlue,
-                                fontSize: 7,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                          child: Center(
+                            child: showRbmLogo
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Image.asset(
+                                      'assets/images/rbm_emblem.jpeg',
+                                      width: 20,
+                                      height: 20,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Text(
+                                                'RBM',
+                                                style: TextStyle(
+                                                  color: AppColors.primaryBlue,
+                                                  fontSize: 7,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                    ),
+                                  )
+                                : const Text(
+                                    'RBM',
+                                    style: TextStyle(
+                                      color: AppColors.primaryBlue,
+                                      fontSize: 7,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
@@ -98,18 +122,28 @@ class ClubCardWidget extends StatelessWidget {
                     const SizedBox(height: 14),
                     Text(
                       card.cardholderName,
-                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       card.employeeNumber,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 11,
+                      ),
                     ),
                     if (deptGrade.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         deptGrade,
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 14),
@@ -143,11 +177,18 @@ class ClubCardWidget extends StatelessWidget {
                             children: [
                               Text(
                                 CurrencyFormatter.format(availableBalance!),
-                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               Text(
                                 'Available balance',
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 9),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 9,
+                                ),
                               ),
                             ],
                           ),
@@ -171,47 +212,55 @@ class ClubCardWidget extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.borderGray),
-          ),
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            children: [
-              Text(
-                'Present to POS attendant for scanning',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary, fontSize: 11),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Container(
-                width: 120,
-                height: 120,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.borderGray, width: 1.5),
+        if (showQrPanel) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.borderGray),
+            ),
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                Text(
+                  'Present to POS attendant for scanning',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                child: QrImageView(
-                  data: card.qrPayload,
-                  size: 104,
-                  backgroundColor: Colors.white,
+                const SizedBox(height: 10),
+                Container(
+                  width: 120,
+                  height: 120,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.borderGray, width: 1.5),
+                  ),
+                  child: QrImageView(
+                    data: card.qrPayload,
+                    size: 104,
+                    backgroundColor: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Token: ${_maskedToken()}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.borderGray, fontSize: 10),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Token: ${_maskedToken()}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.borderGray,
+                    fontSize: 10,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
