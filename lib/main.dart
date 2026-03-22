@@ -24,7 +24,7 @@ Future<void> main() async {
   runApp(const ProviderScope(child: RbmClubStaffApp()));
 }
 
-/// RBM Club House Staff App root.
+/// Club App root.
 class RbmClubStaffApp extends ConsumerWidget {
   /// Creates the root application widget.
   const RbmClubStaffApp({super.key});
@@ -45,7 +45,7 @@ class RbmClubStaffApp extends ConsumerWidget {
     };
 
     return MaterialApp.router(
-      title: 'RBM Club House Staff App',
+      title: 'Club App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(compact: settings.compactMode),
       darkTheme: AppTheme.dark(compact: settings.compactMode),

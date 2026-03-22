@@ -101,6 +101,7 @@ dev_dependencies:
   mockito: ^5.4.6
   build_runner: ^2.5.4
   riverpod_generator: ^2.6.5
+  flutter_launcher_icons: ^0.14.4
 
 dependency_overrides:
   flutter_windowmanager:
@@ -149,3 +150,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/rbm_emblem.jpeg
+  min_sdk_android: 21

@@ -1,6 +1,6 @@
 /// Centralized user-facing strings (no magic strings in UI).
 abstract final class AppStrings {
-  static const String appName = 'RBM Club House Staff App';
+  static const String appName = 'Club App';
 
   static const String activationTitle = 'Activate Account';
   static const String loginTitle = 'Login';
