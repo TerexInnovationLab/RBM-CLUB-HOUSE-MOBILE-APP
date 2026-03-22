@@ -20,6 +20,11 @@ class ReceiptDetailWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider);
     final maskAmounts = settings.amountMasking;
+    final hasItems = receipt.items.isNotEmpty;
+    final subtotal = receipt.items.fold<double>(
+      0,
+      (sum, item) => sum + item.lineTotal,
+    );
 
     String money(double value) {
       return maskAmounts ? 'MWK ******' : CurrencyFormatter.format(value);
@@ -37,14 +42,35 @@ class ReceiptDetailWidget extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            color: AppColors.primaryBlue,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
+              ),
+            ),
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Text(
                   'Reserve Bank of Malawi'.toUpperCase(),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 9,
                     letterSpacing: 1,
                     fontWeight: FontWeight.w500,
@@ -56,40 +82,29 @@ class ReceiptDetailWidget extends ConsumerWidget {
                   receipt.posLocation,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  receipt.receiptNumber,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.65),
-                    fontSize: 10,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  Formatters.formatLocalDateTime(receipt.occurredAt),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 10,
-                  ),
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _HeaderTag(label: receipt.receiptNumber),
+                    _HeaderTag(
+                      label: Formatters.formatLocalDateTime(receipt.occurredAt),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(13, 10, 13, 10),
-            child: _DashedDivider(),
-          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
+            padding: const EdgeInsets.fromLTRB(13, 10, 13, 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Transaction ref',
@@ -97,11 +112,15 @@ class ReceiptDetailWidget extends ConsumerWidget {
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: AppColors.inactive),
                 ),
-                Text(
-                  receipt.salesTransactionId,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    receipt.salesTransactionId,
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -121,7 +140,10 @@ class ReceiptDetailWidget extends ConsumerWidget {
                       child: Text(
                         'Item'.toUpperCase(),
                         style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(color: AppColors.borderGray),
+                            ?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
                     ),
                     SizedBox(
@@ -130,58 +152,84 @@ class ReceiptDetailWidget extends ConsumerWidget {
                         'Qty'.toUpperCase(),
                         textAlign: TextAlign.right,
                         style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(color: AppColors.borderGray),
+                            ?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     SizedBox(
-                      width: 64,
+                      width: 82,
                       child: Text(
                         'Total'.toUpperCase(),
                         textAlign: TextAlign.right,
                         style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(color: AppColors.borderGray),
+                            ?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                for (final item in receipt.items) ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.itemName,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
+                if (!hasItems)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'No line items available.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
                       ),
-                      SizedBox(
-                        width: 40,
-                        child: Text(
-                          'x${item.quantity}',
-                          textAlign: TextAlign.right,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppColors.textSecondary),
+                    ),
+                  )
+                else
+                  for (final item in receipt.items) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.itemName,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        width: 64,
-                        child: Text(
-                          lineTotal(item.lineTotal),
-                          textAlign: TextAlign.right,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppColors.textSecondary),
+                        SizedBox(
+                          width: 40,
+                          child: Text(
+                            'x${item.quantity}',
+                            textAlign: TextAlign.right,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppColors.textSecondary),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                ],
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 82,
+                          child: Text(
+                            lineTotal(item.lineTotal),
+                            textAlign: TextAlign.right,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
               ],
             ),
           ),
@@ -190,9 +238,10 @@ class ReceiptDetailWidget extends ConsumerWidget {
             child: _DashedDivider(),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
+            padding: const EdgeInsets.fromLTRB(13, 0, 13, 12),
             child: Column(
               children: [
+                _row(context, 'Subtotal', money(subtotal)),
                 _row(
                   context,
                   'Total charged',
@@ -231,6 +280,31 @@ class ReceiptDetailWidget extends ConsumerWidget {
           Text(label, style: labelStyle),
           Text(value, style: valueStyle),
         ],
+      ),
+    );
+  }
+}
+
+class _HeaderTag extends StatelessWidget {
+  const _HeaderTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.88),
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
