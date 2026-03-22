@@ -79,6 +79,8 @@ class WalletDetailScreen extends ConsumerWidget {
                       availableBalance: m.remainingAmount,
                       showQrPanel: false,
                       showRbmLogo: true,
+                      staffEmail: auth.staffProfile?.email,
+                      staffPhoneMasked: auth.staffProfile?.phoneMasked,
                     ),
                     loading: () => const _WalletHeroLoading(),
                     error: (_, _) => _WalletFallbackHero(summary: m),
