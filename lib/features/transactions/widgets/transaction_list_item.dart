@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency_formatter.dart';
-import '../../../core/utils/formatters.dart';
 import '../../profile/providers/app_settings_provider.dart';
-import '../../../shared/widgets/rbm_card.dart';
-import '../../../shared/widgets/rbm_pill.dart';
 import '../models/transaction_model.dart';
 
-/// Transaction list item tile.
+/// Clean transaction row inspired by native wallet lists.
 class TransactionListItem extends ConsumerWidget {
   /// Creates a transaction list item.
-  const TransactionListItem({super.key, required this.transaction, this.onTap});
+  const TransactionListItem({
+    super.key,
+    required this.transaction,
+    this.onTap,
+    this.showDivider = true,
+  });
 
   /// Transaction.
   final TransactionModel transaction;
 
   /// Tap handler.
   final VoidCallback? onTap;
+
+  /// Whether to render the bottom divider.
+  final bool showDivider;
 
   bool _isCredit(TransactionModel t) {
     final type = t.transactionType.toUpperCase();
@@ -27,97 +33,108 @@ class TransactionListItem extends ConsumerWidget {
         type.contains('TOPUP');
   }
 
-  String _badgeLabel(TransactionModel t) {
-    if (_isCredit(t)) return 'Credited';
-    final s = t.status.toUpperCase();
-    return switch (s) {
-      'APPROVED' => 'Approved',
-      'DECLINED' => 'Declined',
-      'REVERSED' => 'Reversed',
-      _ => t.status.isEmpty ? 'Pending' : t.status,
-    };
+  Color _avatarColor(String value) {
+    final seed = value.trim().isEmpty ? 0 : value.trim().codeUnitAt(0);
+    final swatch = [
+      AppColors.primaryBlue,
+      AppColors.secondaryBlue,
+      AppColors.warningOrange,
+      AppColors.successGreen,
+      const Color(0xFF4F6DB8),
+    ];
+    return swatch[seed % swatch.length];
   }
 
-  RbmPillTone _badgeTone(TransactionModel t) {
-    if (_isCredit(t)) return RbmPillTone.info;
-    final s = t.status.toUpperCase();
-    return switch (s) {
-      'APPROVED' => RbmPillTone.success,
-      'DECLINED' => RbmPillTone.danger,
-      'REVERSED' => RbmPillTone.warning,
-      _ => RbmPillTone.neutral,
-    };
+  String _subtitle(TransactionModel t) {
+    final local = t.occurredAt.toLocal();
+    final time = DateFormat('HH:mm').format(local);
+    final status = t.status.trim().isEmpty ? 'Pending' : t.status;
+    return '$time • $status';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider);
     final isCredit = _isCredit(transaction);
-    final amountColor = isCredit ? AppColors.successGreen : AppColors.dangerRed;
+    final amountColor = isCredit
+        ? AppColors.successGreen
+        : AppColors.textPrimary;
     final sign = isCredit ? '+' : '-';
     final amountText = settings.amountMasking
         ? '$sign MWK ******'
         : '$sign ${CurrencyFormatter.formatTransaction(transaction.amount)}';
+    final merchant = transaction.merchant.trim().isEmpty
+        ? 'Transaction'
+        : transaction.merchant.trim();
 
-    return RbmCard(
+    return InkWell(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
-              borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        decoration: BoxDecoration(
+          border: showDivider
+              ? const Border(bottom: BorderSide(color: AppColors.borderGray))
+              : null,
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 19,
+              backgroundColor: _avatarColor(merchant).withValues(alpha: 0.14),
+              child: Text(
+                merchant.substring(0, 1).toUpperCase(),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: _avatarColor(merchant),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-            child: Icon(
-              isCredit ? Icons.check_circle_outline : Icons.credit_card,
-              color: AppColors.textSecondary,
-              size: 22,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    merchant,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _subtitle(transaction),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 10),
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  transaction.merchant,
+                  amountText,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textPrimary,
+                    color: amountColor,
+                    fontWeight: FontWeight.w700,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  Formatters.formatDateTimeDot(transaction.occurredAt),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.inactive,
+                  size: 24,
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                amountText,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(color: amountColor),
-              ),
-              const SizedBox(height: 6),
-              RbmPill(
-                label: _badgeLabel(transaction),
-                tone: _badgeTone(transaction),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
