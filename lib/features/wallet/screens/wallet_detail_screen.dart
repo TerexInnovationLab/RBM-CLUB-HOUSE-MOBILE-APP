@@ -12,13 +12,13 @@ import '../../../shared/widgets/rbm_card.dart';
 import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../card/providers/card_provider.dart';
-import '../../card/widgets/club_card_widget.dart';
 import '../../profile/providers/app_settings_provider.dart';
 import '../models/monthly_summary_model.dart';
 import '../providers/wallet_provider.dart';
 import '../widgets/allocation_history_list.dart';
 import '../widgets/mini_statement_widget.dart';
 import '../widgets/spending_chart_widget.dart';
+import '../widgets/wallet_payment_card.dart';
 
 /// Wallet detail screen.
 class WalletDetailScreen extends ConsumerWidget {
@@ -28,6 +28,7 @@ class WalletDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final monthly = ref.watch(walletMonthlySummaryProvider);
+    final balance = ref.watch(walletBalanceProvider);
     final history = ref.watch(allocationHistoryProvider);
     final virtualCard = ref.watch(virtualCardProvider);
     final auth = ref.watch(authProvider);
@@ -71,19 +72,13 @@ class WalletDetailScreen extends ConsumerWidget {
               data: (m) => ListView(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 84),
                 children: [
-                  virtualCard.when(
-                    data: (card) => ClubCardWidget(
-                      card: card,
-                      staffDepartment: auth.staffProfile?.department,
-                      staffGrade: auth.staffProfile?.grade,
-                      availableBalance: m.remainingAmount,
-                      showQrPanel: false,
-                      showRbmLogo: true,
-                      staffEmail: auth.staffProfile?.email,
-                      staffPhoneMasked: auth.staffProfile?.phoneMasked,
-                    ),
-                    loading: () => const _WalletHeroLoading(),
-                    error: (_, _) => _WalletFallbackHero(summary: m),
+                  WalletPaymentCard(
+                    summary: m,
+                    currentBalance:
+                        balance.asData?.value.currentBalance ??
+                        m.remainingAmount,
+                    profile: auth.staffProfile,
+                    card: virtualCard.asData?.value,
                   ),
                   const SizedBox(height: 12),
                   _WalletSummaryPanel(summary: m),
@@ -140,11 +135,18 @@ class _WalletSummaryPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Wallet Summary',
+            'Important this cycle',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
             ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Allocated, spent and remaining at a glance.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 10),
           Row(
@@ -250,93 +252,6 @@ class _MetricTile extends StatelessWidget {
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WalletHeroLoading extends StatelessWidget {
-  const _WalletHeroLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 180,
-      decoration: BoxDecoration(
-        color: AppColors.primaryBlue.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: const Center(child: CircularProgressIndicator()),
-    );
-  }
-}
-
-class _WalletFallbackHero extends ConsumerWidget {
-  const _WalletFallbackHero({required this.summary});
-
-  final MonthlySummaryModel summary;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(authProvider).staffProfile;
-    final maskAmounts = ref.watch(appSettingsProvider).amountMasking;
-
-    final balance = maskAmounts
-        ? 'MWK ******'
-        : CurrencyFormatter.format(
-            summary.remainingAmount,
-          ).replaceFirst('.00', '');
-    final title = (profile?.fullName ?? 'Staff Member').trim();
-    final subtitle = (profile?.employeeNumber ?? 'EMP-00000').trim();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      decoration: BoxDecoration(
-        color: AppColors.primaryBlue,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Reserve Bank of Malawi'.toUpperCase(),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.78),
-              fontSize: 10,
-              letterSpacing: 0.7,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.74),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            balance,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 30,
-            ),
-          ),
-          Text(
-            'Available balance',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
-            ),
           ),
         ],
       ),
