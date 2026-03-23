@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
@@ -66,7 +65,6 @@ class WalletPaymentCard extends ConsumerWidget {
       if ((profile?.department ?? '').trim().isNotEmpty)
         profile!.department.trim(),
     ].join('  |  ');
-    final validThru = DateFormat('MM/yy').format(summary.periodEnd.toLocal());
     final balance = maskAmounts
         ? 'MWK ******'
         : CurrencyFormatter.format(currentBalance).replaceFirst('.00', '');
@@ -75,6 +73,11 @@ class WalletPaymentCard extends ConsumerWidget {
         : CurrencyFormatter.format(
             summary.allocatedAmount,
           ).replaceFirst('.00', '');
+    final accessStatus =
+        ((profile?.status ?? '').trim().isEmpty
+                ? 'Active'
+                : (profile?.status ?? '').trim())
+            .toUpperCase();
 
     return Container(
       width: double.infinity,
@@ -225,14 +228,14 @@ class WalletPaymentCard extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _CardMeta(label: 'CARD HOLDER', value: holderName),
+                    child: _CardMeta(label: 'MEMBER NAME', value: holderName),
                   ),
                   const SizedBox(width: 8),
-                  _CardMeta(label: 'VALID THRU', value: validThru),
+                  _CardMeta(label: 'ACCESS', value: accessStatus),
                   const SizedBox(width: 8),
                   Expanded(
                     child: _CardMeta(
-                      label: 'ALLOCATED',
+                      label: 'CLUB ALLOWANCE',
                       value: allocated,
                       alignEnd: true,
                     ),

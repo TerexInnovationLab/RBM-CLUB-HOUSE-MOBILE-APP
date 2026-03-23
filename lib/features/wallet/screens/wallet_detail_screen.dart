@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../routes/route_names.dart';
 import '../../../shared/widgets/app_error_widget.dart';
 import '../../../shared/widgets/offline_banner.dart';
 import '../../../shared/widgets/rbm_app_bar.dart';
@@ -12,10 +14,7 @@ import '../../../shared/widgets/rbm_card.dart';
 import '../../../shared/widgets/rbm_tab_scaffold.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../card/providers/card_provider.dart';
-import '../../profile/providers/app_settings_provider.dart';
-import '../models/monthly_summary_model.dart';
 import '../providers/wallet_provider.dart';
-import '../widgets/allocation_history_list.dart';
 import '../widgets/mini_statement_widget.dart';
 import '../widgets/spending_chart_widget.dart';
 import '../widgets/wallet_payment_card.dart';
@@ -29,7 +28,6 @@ class WalletDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final monthly = ref.watch(walletMonthlySummaryProvider);
     final balance = ref.watch(walletBalanceProvider);
-    final history = ref.watch(allocationHistoryProvider);
     final virtualCard = ref.watch(virtualCardProvider);
     final auth = ref.watch(authProvider);
 
@@ -81,19 +79,14 @@ class WalletDetailScreen extends ConsumerWidget {
                     card: virtualCard.asData?.value,
                   ),
                   const SizedBox(height: 12),
-                  _WalletSummaryPanel(summary: m),
-                  const SizedBox(height: 12),
                   SpendingChartWidget(
                     spent: m.spentAmount,
                     remaining: m.remainingAmount,
                   ),
                   const SizedBox(height: 12),
-                  history.when(
-                    data: (items) => AllocationHistoryList(items: items),
-                    loading: () => const _HistoryLoading(),
-                    error: (e, _) =>
-                        AppErrorWidget(message: 'Failed to load history: $e'),
-                  ),
+                  const _UpcomingReservationsSection(),
+                  const SizedBox(height: 12),
+                  const _ClubNoticesSupportSection(),
                   const SizedBox(height: 12),
                   const MiniStatementWidget(),
                 ],
@@ -109,33 +102,45 @@ class WalletDetailScreen extends ConsumerWidget {
   }
 }
 
-class _WalletSummaryPanel extends ConsumerWidget {
-  const _WalletSummaryPanel({required this.summary});
+class _UpcomingReservationsSection extends StatelessWidget {
+  const _UpcomingReservationsSection();
 
-  final MonthlySummaryModel summary;
+  List<_ClubReservation> _items() {
+    final now = DateTime.now();
+    return [
+      _ClubReservation(
+        title: 'Lunch Table',
+        location: 'Main Dining Hall',
+        startAt: DateTime(now.year, now.month, now.day, 12, 30),
+        status: 'Confirmed',
+        icon: Icons.restaurant_rounded,
+      ),
+      _ClubReservation(
+        title: 'Tennis Court 2',
+        location: 'Sports Wing',
+        startAt: DateTime(now.year, now.month, now.day + 1, 17, 30),
+        status: 'Reserved',
+        icon: Icons.sports_tennis_rounded,
+      ),
+      _ClubReservation(
+        title: 'Family Pool Slot',
+        location: 'Aquatics Deck',
+        startAt: DateTime(now.year, now.month, now.day + 3, 10, 0),
+        status: 'Upcoming',
+        icon: Icons.pool_rounded,
+      ),
+    ];
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final maskAmounts = ref.watch(appSettingsProvider).amountMasking;
-    final usageRatio = summary.allocatedAmount <= 0
-        ? 0.0
-        : (summary.spentAmount / summary.allocatedAmount).clamp(0.0, 1.0);
-    final daysRemaining = summary.periodEnd
-        .toLocal()
-        .difference(DateTime.now())
-        .inDays;
-
-    String money(double value) {
-      if (maskAmounts) return 'MWK ******';
-      return CurrencyFormatter.format(value).replaceFirst('.00', '');
-    }
-
+  Widget build(BuildContext context) {
+    final items = _items();
     return RbmCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Important this cycle',
+            'Upcoming reservations',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
@@ -143,115 +148,119 @@ class _WalletSummaryPanel extends ConsumerWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Allocated, spent and remaining at a glance.',
+            'Your next clubhouse bookings and facility slots.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _MetricTile(
-                  label: 'Allocated',
-                  value: money(summary.allocatedAmount),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _MetricTile(
-                  label: 'Spent',
-                  value: money(summary.spentAmount),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _MetricTile(
-                  label: 'Remaining',
-                  value: money(summary.remainingAmount),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Usage this cycle',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Text(
-                '${(usageRatio * 100).toStringAsFixed(0)}%',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.warningOrange,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: usageRatio,
-              minHeight: 8,
-              backgroundColor: const Color(0xFFE8EDF6),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.warningOrange,
-              ),
-            ),
-          ),
-          const SizedBox(height: 9),
-          Text(
-            'Resets on ${Formatters.formatDate(summary.periodEnd)} | '
-            '${daysRemaining < 0 ? 0 : daysRemaining} days remaining',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-          ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < items.length; i++) ...[
+            _ReservationTile(item: items[i]),
+            if (i != items.length - 1) const SizedBox(height: 10),
+          ],
         ],
       ),
     );
   }
 }
 
-class _MetricTile extends StatelessWidget {
-  const _MetricTile({required this.label, required this.value});
+class _ClubNoticesSupportSection extends StatelessWidget {
+  const _ClubNoticesSupportSection();
 
-  final String label;
-  final String value;
+  List<_ClubNotice> _items() {
+    final today = DateTime.now();
+    return [
+      _ClubNotice(
+        title: 'Pool maintenance window',
+        message:
+            'The pool deck closes ${DateFormat('dd MMM').format(today.add(const Duration(days: 1)))} from 14:00 to 16:00 for routine servicing.',
+        icon: Icons.pool_rounded,
+        accent: AppColors.warningOrange,
+      ),
+      const _ClubNotice(
+        title: 'Guest access reminder',
+        message:
+            'Guest visits should be registered at reception before entry to the clubhouse facilities.',
+        icon: Icons.groups_rounded,
+        accent: AppColors.secondaryBlue,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGray),
-      ),
+    final items = _items();
+    return RbmCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            value,
+            'Club notices and support',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Stay informed and reach clubhouse help quickly.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < items.length; i++) ...[
+            _NoticeTile(item: items[i]),
+            if (i != items.length - 1) const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F9FD),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.borderGray),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Need help?',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Open support or browse common clubhouse questions.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.go(RouteNames.help),
+                        icon: const Icon(Icons.support_agent_rounded, size: 18),
+                        label: const Text('Help Desk'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => context.go(RouteNames.faq),
+                        icon: const Icon(Icons.quiz_outlined, size: 18),
+                        label: const Text('FAQ'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -259,14 +268,188 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-class _HistoryLoading extends StatelessWidget {
-  const _HistoryLoading();
+class _ReservationTile extends StatelessWidget {
+  const _ReservationTile({required this.item});
+
+  final _ClubReservation item;
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 14),
-      child: Center(child: CircularProgressIndicator()),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F9FD),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borderGray),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(item.icon, color: AppColors.primaryBlue, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.location,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.schedule_rounded,
+                      size: 15,
+                      color: AppColors.inactive,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        '${Formatters.formatDate(item.startAt)} at ${DateFormat('HH:mm').format(item.startAt.toLocal())}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _StatusPill(label: item.status, color: AppColors.successGreen),
+        ],
+      ),
     );
   }
+}
+
+class _NoticeTile extends StatelessWidget {
+  const _NoticeTile({required this.item});
+
+  final _ClubNotice item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: item.accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: item.accent.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(item.icon, color: item.accent, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.message,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _ClubReservation {
+  const _ClubReservation({
+    required this.title,
+    required this.location,
+    required this.startAt,
+    required this.status,
+    required this.icon,
+  });
+
+  final String title;
+  final String location;
+  final DateTime startAt;
+  final String status;
+  final IconData icon;
+}
+
+class _ClubNotice {
+  const _ClubNotice({
+    required this.title,
+    required this.message,
+    required this.icon,
+    required this.accent,
+  });
+
+  final String title;
+  final String message;
+  final IconData icon;
+  final Color accent;
 }
